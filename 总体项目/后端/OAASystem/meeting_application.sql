@@ -19,3 +19,14 @@ CREATE TABLE IF NOT EXISTS `meeting_application` (
   INDEX (`applicantId`),
   INDEX (`tenantId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会议参会申请表'; 
+
+/*
+ * Carousel Images table creation
+ */
+CREATE TABLE IF NOT EXISTS `carousel_images` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL COMMENT '图片名称',
+  `url` VARCHAR(500) NOT NULL COMMENT '图片URL路径',
+  `created_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='轮播图表'; 

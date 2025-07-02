@@ -232,7 +232,7 @@ const fetchTenantDetail = async () => {
   loading.value = true
   try {
     const tenantId = route.params.id
-    const response = await axios.get(`http://localhost:9049/tenants/${tenantId}`)
+    const response = await axios.get(`http://localhost:9049/api/tenants/${tenantId}`)
     if (response.data.isOK) {
       tenant.value = response.data.tenant
     }

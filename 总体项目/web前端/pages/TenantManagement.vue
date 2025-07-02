@@ -18,10 +18,33 @@
       </el-row>
       <el-row :gutter="20" style="margin-top: 20px;">
         <el-col>
-          <el-button type="primary" @click="openAddDialog">新增</el-button>
-          <el-button type="warning" @click="openEditDialog">修改</el-button>
-          <el-button type="danger" @click="handleDeleteConfirm">删除</el-button>
+          <el-button 
+            v-if="userRole === 'Admin'" 
+            type="primary" 
+            @click="openAddDialog"
+          >
+            新增
+          </el-button>
+          <el-button 
+            v-if="selectedRow && canEditTenant(selectedRow)" 
+            type="warning" 
+            @click="openEditDialog"
+          >
+            修改
+          </el-button>
+          <el-button 
+            v-if="selectedRows.length > 0 && selectedRows.every(row => canDeleteTenant(row))" 
+            type="danger" 
+            @click="handleDeleteConfirm"
+          >
+            删除
+          </el-button>
           <el-button type="success" @click="handleExport">导出</el-button>
+          
+          <!-- 权限提示 -->
+          <div v-if="userRole === 'TAdmin'" style="margin-top: 8px; color: #666; font-size: 12px;">
+            💡 提示：您只能查看所有租户详情，但只能修改和删除自己的租户信息
+          </div>
         </el-col>
       </el-row>
       <el-table
@@ -60,8 +83,25 @@
           <template v-slot="scope">
             <div class="action-buttons">
               <el-button type="link" size="small" @click="goToTenantDetail(scope.row.id)">详情</el-button>
-              <el-button type="link" size="small" @click="openEditDialog(scope.row)">修改</el-button>
-              <el-button type="link" size="small" @click="handleDelete(scope.row)">删除</el-button>
+              <el-button 
+                v-if="canEditTenant(scope.row)"
+                type="link" 
+                size="small" 
+                @click="openEditDialog(scope.row)"
+              >
+                修改
+              </el-button>
+              <el-button 
+                v-if="canDeleteTenant(scope.row)"
+                type="link" 
+                size="small" 
+                @click="handleDelete(scope.row)"
+              >
+                删除
+              </el-button>
+              <span v-if="!canEditTenant(scope.row) && !canDeleteTenant(scope.row)" style="color: #999; font-size: 12px;">
+                只读
+              </span>
             </div>
           </template>
         </el-table-column>
@@ -91,7 +131,7 @@
             <el-col :span="24">
               <el-form-item label="租户图标" prop="icon">
                 <el-upload
-                  action="http://localhost:9049/tenants/upload-icon"
+                  action="http://localhost:9049/api/tenants/upload-icon"
                   list-type="picture-card"
                   :on-success="handleUploadSuccess"
                   :on-error="handleUploadError"
@@ -189,7 +229,7 @@
             <el-col :span="24">
               <el-form-item label="租户图标" prop="icon">
                 <el-upload
-                  action="http://localhost:9049/tenants/upload-icon"
+                  action="http://localhost:9049/api/tenants/upload-icon"
                   list-type="picture-card"
                   :on-success="handleUploadSuccess"
                   :on-error="handleUploadError"
@@ -373,6 +413,7 @@ phone: ''
 });
 const tenants = ref([]);
 const selectedRow = ref(null);
+const selectedRows = ref([]); // 存储所有选中的行
 const loading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(6);
@@ -410,12 +451,44 @@ remark: [{ required: true, message: '请输入备注', trigger: 'blur' }]
 
 const router = useRouter();
 
+// 用户权限控制
+const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
+const userRole = ref(currentUser.role || 'User')
+const userTenantId = ref(currentUser.tenantId || null)
+
+// 权限检查函数
+const canEditTenant = (tenant) => {
+  if (userRole.value === 'Admin') {
+    return true // 系统管理员可以编辑所有租户
+  }
+  if (userRole.value === 'TAdmin') {
+    return tenant.id === userTenantId.value // 租户管理员只能编辑自己的租户
+  }
+  return false // 普通用户不能编辑
+}
+
+const canDeleteTenant = (tenant) => {
+  if (userRole.value === 'Admin') {
+    return true // 系统管理员可以删除所有租户
+  }
+  if (userRole.value === 'TAdmin') {
+    return tenant.id === userTenantId.value // 租户管理员只能删除自己的租户
+  }
+  return false // 普通用户不能删除
+}
+
 const fetchTenants = async () => {
   loading.value = true;
   try {
     const response = await axios.get('/api/tenants/all');
     tenants.value = response.data.tenantList;
     total.value = response.data.total;
+    
+    console.log('当前用户权限:', {
+      role: userRole.value,
+      tenantId: userTenantId.value,
+      canEdit: tenants.value.map(t => ({ id: t.id, name: t.tenantName, canEdit: canEditTenant(t) }))
+    })
   } catch (error) {
     ElMessage.error('获取租户数据失败');
   } finally {
@@ -431,7 +504,7 @@ const handleSearch = () => {
     contactPerson: searchForm.value.contactPerson,
     phone: searchForm.value.phone
   };
-  axios.get('http://localhost:9049/tenants/search', { params })
+        axios.get('http://localhost:9049/api/tenants/search', { params })
     .then(response => {
       tenants.value = response.data.tenantList;
       total.value = response.data.total;
@@ -501,14 +574,23 @@ const closeAddDialog = () => {
 };
 
 const openEditDialog = (row) => {
-  if (row) {
-    Object.assign(formData.value, row);
-  } else if (selectedRow.value) {
-    Object.assign(formData.value, selectedRow.value);
-  } else {
-    ElMessage.error('请先选择要修改的租户');
+  let targetRow = row;
+  if (!targetRow) {
+    if (selectedRow.value) {
+      targetRow = selectedRow.value;
+    } else {
+      ElMessage.error('请先选择要修改的租户');
+      return;
+    }
+  }
+  
+  // 权限检查
+  if (!canEditTenant(targetRow)) {
+    ElMessage.error('您没有权限修改此租户');
     return;
   }
+  
+  Object.assign(formData.value, targetRow);
   fileList.value = [
     {
       name: '租户图标',
@@ -637,8 +719,8 @@ const submitForm = () => {
     return;
   }
 
-  // 使用正确的后端接口
-  axios.post('http://localhost:9049/tenants', formData.value).then(() => {
+  // 使用正确的后端接口 - 修正为/api/tenants路径
+  axios.post('http://localhost:9049/api/tenants/insert2', formData.value).then(() => {
     ElMessage.success('租户创建成功');
     closeAddDialog();
     fetchTenants();
@@ -654,8 +736,14 @@ const submitEditForm = () => {
     return;
   }
 
-  // 使用正确的后端接口
-  axios.put(`http://localhost:9049/tenants/${formData.value.id}`, formData.value).then(() => {
+  // 权限检查
+  if (!canEditTenant({ id: formData.value.id })) {
+    ElMessage.error('您没有权限修改此租户');
+    return;
+  }
+
+  // 使用正确的后端接口 - 修正为/api/tenants路径
+  axios.put(`http://localhost:9049/api/tenants/${formData.value.id}`, formData.value).then(() => {
     ElMessage.success('租户修改成功');
     closeEditDialog();
     fetchTenants();
@@ -682,6 +770,12 @@ const handleDeleteConfirm = () => {
 };
 
 const handleDelete = (row) => {
+  // 权限检查
+  if (!canDeleteTenant(row)) {
+    ElMessage.error('您没有权限删除此租户');
+    return;
+  }
+  
   axios.delete(`/api/tenants/delete/${row.id}`)
     .then(() => {
       ElMessage.success('租户删除成功');
@@ -694,6 +788,14 @@ const handleDelete = (row) => {
 
 const handleSelectionChange = (rows) => {
   selectedRow.value = rows.length ? rows[0] : null;
+  selectedRows.value = rows; // 存储所有选中的行
+  
+  console.log('选中的租户:', {
+    count: rows.length,
+    names: rows.map(r => r.tenantName),
+    canEdit: rows.filter(r => canEditTenant(r)).length,
+    canDelete: rows.filter(r => canDeleteTenant(r)).length
+  });
 };
 
 const handleSizeChange = (size) => {
@@ -767,7 +869,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
         formData.append('file', file);
         
         // 上传图片到服务器
-        axios.post('http://localhost:9049/tenants/upload-icon', formData, {
+        axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -827,7 +929,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
          formData.append('file', file);
          
          // 上传音频到服务器
-        axios.post('http://localhost:9049/tenants/upload-icon', formData, {
+        axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -889,7 +991,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
          formData.append('file', file);
          
          // 上传视频到服务器
-        axios.post('http://localhost:9049/tenants/upload-icon', formData, {
+        axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -1091,7 +1193,7 @@ const deleteTenantIcon = async (row) => {
       icon: null
     };
     
-    await axios.put(`http://localhost:9049/tenants/${row.id}`, updateData);
+            await axios.put(`http://localhost:9049/api/tenants/${row.id}`, updateData);
     ElMessage.success('租户图标删除成功');
     fetchTenants();
   } catch (error) {
@@ -1134,7 +1236,7 @@ const handleAudioUpload = () => {
       formData.append('file', file);
       
       // 上传音频到服务器
-      axios.post('http://localhost:9049/tenants/upload-icon', formData, {
+      axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -1236,7 +1338,7 @@ const handleVideoUpload = () => {
       formData.append('file', file);
       
       // 上传视频到服务器
-      axios.post('http://localhost:9049/tenants/upload-icon', formData, {
+      axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -1313,6 +1415,7 @@ return {
   searchForm,
   tenants,
   selectedRow,
+  selectedRows,
   loading,
   currentPage,
   pageSize,
@@ -1324,6 +1427,11 @@ return {
   detailsFormData,
   fileList,
   rules,
+  // 权限控制
+  userRole,
+  userTenantId,
+  canEditTenant,
+  canDeleteTenant,
   handleSearch,
   handleReset,
   handleExport,

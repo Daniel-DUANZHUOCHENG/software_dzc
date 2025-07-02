@@ -17,7 +17,7 @@ public class CarouselImageService {
     @Autowired
     private CarouselImageMapper carouselImageMapper;
 
-    private static final String IMAGE_BASE_PATH = "E:/OAASystem/OAASystem/src/main/resources/static/images/";
+    private static final String IMAGE_BASE_PATH = System.getProperty("user.dir") + "/src/main/resources/static/images/";
 
     public CarouselImage saveImage(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
@@ -39,7 +39,20 @@ public class CarouselImageService {
 
 
     public List<CarouselImage> getAllImages() {
-        return carouselImageMapper.getAllImages();
+        List<CarouselImage> images = carouselImageMapper.getAllImages();
+        
+        // 如果数据库中没有轮播图，返回默认图片
+        if (images == null || images.isEmpty()) {
+            CarouselImage defaultImage = new CarouselImage();
+            defaultImage.setId(0L);
+            defaultImage.setName("默认轮播图");
+            defaultImage.setUrl("/images/banner/banner1.jpg");
+            
+            images = new java.util.ArrayList<>();
+            images.add(defaultImage);
+        }
+        
+        return images;
     }
 
     public CarouselImage getImageById(Long id) {

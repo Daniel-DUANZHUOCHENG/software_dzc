@@ -14,11 +14,16 @@ export default defineConfig({
         target: 'http://localhost:9049/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      // 代理后端上传的轮播图
+      '/carousel': {
+        target: 'http://localhost:9049/',
+        changeOrigin: true
       }
     },
     port: 5173,
     open: true
   },
-  // 确保静态资源能正确访问
-  publicDir: 'static'
+  // 使用默认的 public 目录
+  publicDir: 'public'
 });

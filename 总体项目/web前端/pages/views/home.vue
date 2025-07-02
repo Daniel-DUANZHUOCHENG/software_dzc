@@ -24,11 +24,12 @@
       </div>
       
       <el-carousel 
-        :interval="4000" 
-        arrow="always" 
+        :interval="carouselImages.length > 1 ? 4000 : 0" 
+        :arrow="carouselImages.length > 1 ? 'always' : 'never'" 
         height="400px"
         class="main-carousel"
-        indicator-position="outside"
+        :indicator-position="carouselImages.length > 1 ? 'outside' : 'none'"
+        :autoplay="carouselImages.length > 1"
       >
         <el-carousel-item v-for="(image, index) in carouselImages" :key="index">
           <div class="carousel-item">
@@ -39,7 +40,7 @@
               class="carousel-image"
               :alt="`轮播图${index + 1}`"
               style="cursor: pointer; width: 100%; height: 100%; object-fit: cover;"
-              @error="event => event.target.src = '/images/default-icon.jpg'"
+              @error="event => event.target.src = '/images/banner/banner1.jpg'"
             />
             <div class="carousel-overlay">
               <h3>测盟汇系统</h3>
@@ -332,12 +333,13 @@
     >
       <div class="dialog-content">
         <el-upload
-          action="http://localhost:9049/carousel/upload"
+          action="/carousel/upload"
           list-type="picture-card"
           :on-success="handleUploadSuccess"
           :on-remove="handleRemove"
           :file-list="fileList"
           class="upload-area"
+          accept=".jpg,.jpeg,.png,.gif,.webp"
         >
           <el-icon><Plus /></el-icon>
         </el-upload>
@@ -381,9 +383,50 @@ const isTenantAdmin = computed(() => userRole.value === 'TAdmin')
 const isAdminOrTAdmin = computed(() => isSystemAdmin.value || isTenantAdmin.value)
 const isRegularUser = computed(() => userRole.value === 'User')
 
+// 默认轮播图 - 使用前端本地图片，只显示一张
 const carouselImages = ref([
   '/images/banner/banner1.jpg'
 ])
+
+// 存储完整的轮播图数据（包含ID）
+const carouselImagesData = ref([])
+
+// 获取轮播图数据
+const fetchCarouselImages = async () => {
+  try {
+    const { data } = await axios.get('/carousel/images')
+    
+    // 默认图片
+    const defaultImage = '/images/banner/banner1.jpg'
+    
+    if (Array.isArray(data) && data.length > 0) {
+      // 存储完整的数据（包含ID）
+      carouselImagesData.value = data
+      
+      // 构建显示用的URL列表
+      const uploadedImages = data.map(img => {
+        return img.url.startsWith('http') ? img.url : `http://localhost:9049${img.url}`
+      })
+      
+      // 合并默认图片和上传的图片，只有上传了图片才开始轮播
+      carouselImages.value = [defaultImage, ...uploadedImages]
+      console.log('已有上传图片，开启轮播模式')
+    } else {
+      // 如果没有上传的图片，只显示默认图片，不轮播
+      carouselImagesData.value = []
+      carouselImages.value = [defaultImage]
+      console.log('无上传图片，仅显示默认图片')
+    }
+    
+    console.log('轮播图列表:', carouselImages.value)
+    console.log('轮播图数据:', carouselImagesData.value)
+  } catch (err) {
+    console.error('获取轮播图失败:', err)
+    // 获取失败时只使用默认图片
+    carouselImagesData.value = []
+    carouselImages.value = ['/images/banner/banner1.jpg']
+  }
+}
 
 const tenants = ref<Tenant[]>([])
 const onlineUsers = ref(0)
@@ -415,6 +458,7 @@ onMounted(() => {
   loadUserRole()
   
   fetchTenants()
+  fetchCarouselImages()
   incrementOnlineUsers()
   fetchStats()
   fetchAnalyticsData()
@@ -625,8 +669,21 @@ const fetchStats = () => {
   }, 5000)
 }
 
-const openEditDialog = () => {
+const openEditDialog = async () => {
   editDialogVisible.value = true
+  
+  // 获取最新的轮播图数据并转换为fileList格式
+  await fetchCarouselImages()
+  
+  // 构建文件列表，包含数据库ID以便删除
+  fileList.value = carouselImagesData.value.map((item, index) => ({
+    name: item.name || `轮播图${index + 1}`,
+    url: item.url.startsWith('http') ? item.url : `http://localhost:9049${item.url}`,
+    uid: item.id, // 使用数据库ID作为uid
+    dbId: item.id // 额外存储数据库ID
+  }))
+  
+  console.log('构建的文件列表:', fileList.value)
 }
 
 const closeEditDialog = () => {
@@ -635,17 +692,73 @@ const closeEditDialog = () => {
 
 const handleUploadSuccess = (response: any, file: any, fileList: any[]) => {
   console.log('Upload response:', response)
-  const imageUrl = response.url ? `http://localhost:9049${response.url}` : response
-  carouselImages.value.push(imageUrl)
-  ElMessage.success('图片上传成功')
+  
+  if (response && response.url) {
+    const imageUrl = response.url.startsWith('http') ? response.url : `http://localhost:9049${response.url}`
+    
+    // 不直接push，而是重新获取轮播图列表以确保正确的顺序
+    ElMessage.success('图片上传成功')
+    
+    // 延迟获取轮播图，确保后端已保存
+    setTimeout(() => {
+      fetchCarouselImages()
+    }, 500)
+  } else {
+    ElMessage.error('图片上传失败，响应格式错误')
+    console.error('Invalid upload response:', response)
+  }
 }
 
-const handleRemove = (file: any, fileList: any[]) => {
-  const index = carouselImages.value.findIndex(img => img === file.url)
-  if (index > -1) {
-    carouselImages.value.splice(index, 1)
+const handleRemove = async (file: any, fileList: any[]) => {
+  try {
+    console.log('删除文件:', file)
+    
+    // 如果是默认图片，不允许删除
+    if (file.url === '/images/banner/banner1.jpg' || file.name === 'banner1.jpg') {
+      ElMessage.warning('不能删除默认轮播图')
+      return false
+    }
+    
+    let imageId = null
+    
+    // 获取要删除的图片ID
+    if (file.response && file.response.id) {
+      // 刚上传的图片
+      imageId = file.response.id
+    } else if (file.dbId) {
+      // 已存在的图片
+      imageId = file.dbId
+    } else if (file.uid && typeof file.uid === 'number') {
+      // 使用uid作为ID
+      imageId = file.uid
+    }
+    
+    if (imageId) {
+      console.log('删除轮播图ID:', imageId)
+      await axios.delete(`/carousel/image/${imageId}`)
+      ElMessage.success('图片删除成功')
+    } else {
+      console.warn('无法找到图片ID，可能是本地文件')
+      ElMessage.success('图片删除成功')
+    }
+    
+    // 重新获取轮播图列表
+    setTimeout(async () => {
+      await fetchCarouselImages()
+      // 重新构建文件列表
+      fileList.value = carouselImagesData.value.map((item, index) => ({
+        name: item.name || `轮播图${index + 1}`,
+        url: item.url.startsWith('http') ? item.url : `http://localhost:9049${item.url}`,
+        uid: item.id,
+        dbId: item.id
+      }))
+    }, 500)
+    
+  } catch (error) {
+    console.error('删除图片失败:', error)
+    ElMessage.error('删除图片失败')
+    return false
   }
-  ElMessage.success('图片删除成功')
 }
 
 const submitForm = () => {

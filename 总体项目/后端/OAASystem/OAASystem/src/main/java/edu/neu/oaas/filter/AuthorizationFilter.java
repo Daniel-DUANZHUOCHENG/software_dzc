@@ -83,10 +83,27 @@ public class AuthorizationFilter extends OncePerRequestFilter {
                requestURI.startsWith("/userBehavior") ||  // 用户行为相关接口
                requestURI.startsWith("/public") ||
                requestURI.contains("/static/") ||
+               requestURI.startsWith("/images/") ||       // 轮播图及其他图片资源
+               requestURI.startsWith("/avatar/") ||       // 头像资源
+               requestURI.startsWith("/CourseCover/") ||   // 课程封面资源
+               requestURI.startsWith("/Video/") ||        // 视频资源
+               requestURI.startsWith("/tenant-icons/") || // 租户图标资源
+               requestURI.startsWith("/icons/") ||        // 通用图标资源
+               requestURI.startsWith("/ConferenceCover/") || // 会议封面资源
+               requestURI.startsWith("/carousel/") ||     // 轮播图相关接口
                requestURI.endsWith(".js") ||
                requestURI.endsWith(".css") ||
                requestURI.endsWith(".html") ||
                requestURI.endsWith(".ico") ||
+               requestURI.endsWith(".jpg") ||
+               requestURI.endsWith(".jpeg") ||
+               requestURI.endsWith(".png") ||
+               requestURI.endsWith(".gif") ||
+               requestURI.endsWith(".webp") ||
+               requestURI.endsWith(".svg") ||
+               requestURI.endsWith(".mp4") ||
+               requestURI.endsWith(".avi") ||
+               requestURI.endsWith(".mov") ||
                // 临时添加：跳过所有API权限验证（用于调试）
                requestURI.startsWith("/api/courses") ||   // 课程相关接口
                requestURI.startsWith("/users/all") ||     // 用户列表接口
