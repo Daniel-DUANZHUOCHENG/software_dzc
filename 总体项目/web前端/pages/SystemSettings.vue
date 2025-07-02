@@ -11,7 +11,7 @@
       <!-- 基本设置 -->
       <div class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">基本设置</h2>
+          <h2 class="section-title"><el-icon class="section-icon"><Setting /></el-icon> 基本设置</h2>
           <p class="section-description">系统基础配置选项</p>
         </div>
         
@@ -53,7 +53,7 @@
       <!-- 安全设置 -->
       <div class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">安全设置</h2>
+          <h2 class="section-title"><el-icon class="section-icon"><Lock /></el-icon> 安全设置</h2>
           <p class="section-description">系统安全相关配置</p>
         </div>
         
@@ -95,7 +95,7 @@
       <!-- 通知设置 -->
       <div class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">通知设置</h2>
+          <h2 class="section-title"><el-icon class="section-icon"><BellFilled /></el-icon> 通知设置</h2>
           <p class="section-description">系统通知和提醒配置</p>
         </div>
         
@@ -137,7 +137,7 @@
       <!-- 存储设置 -->
       <div class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">存储设置</h2>
+          <h2 class="section-title"><el-icon class="section-icon"><Box /></el-icon> 存储设置</h2>
           <p class="section-description">文件存储和数据库配置</p>
         </div>
         
@@ -200,7 +200,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, RefreshLeft, Delete } from '@element-plus/icons-vue'
+import { Check, RefreshLeft, Delete, Setting, Lock, BellFilled, Box } from '@element-plus/icons-vue'
 
 const saving = ref(false)
 
@@ -379,6 +379,14 @@ const clearCache = async () => {
   font-weight: 600;
   color: #263238;
   margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  font-size: 24px;
+  color: #00BCD4;
 }
 
 .section-description {
@@ -398,17 +406,17 @@ const clearCache = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 20px;
-  background: rgba(248, 250, 252, 0.8);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.85) 0%, rgba(240, 249, 255, 0.85) 100%);
   border-radius: 12px;
   border: 1px solid rgba(0, 188, 212, 0.08);
   transition: all 0.3s ease;
 }
 
 .setting-item:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-color: rgba(0, 188, 212, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 188, 212, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 188, 212, 0.15);
 }
 
 .setting-info {
@@ -517,5 +525,9 @@ const clearCache = async () => {
 [data-theme="dark"] .settings-actions {
   background: rgba(40, 40, 40, 0.95);
   border-color: rgba(0, 188, 212, 0.2);
+}
+
+[data-theme="dark"] .section-icon {
+  color: #4DD0E1;
 }
 </style> 
