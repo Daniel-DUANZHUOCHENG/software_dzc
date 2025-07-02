@@ -213,15 +213,16 @@ public class DepartmentController {
         try {
             Department department = departmentService.getDepartmentById(departmentId);
             if (department != null) {
+                // 正常返回找到的部门
                 List<Department> departments = new ArrayList<>();
                 departments.add(department);
                 map.put("departmentList", departments);
-                map.put("isOK", true);
             } else {
+                // 如果未找到部门，不视为错误，返回空列表即可，避免前端弹窗报错
                 map.put("departmentList", new ArrayList<>());
-                map.put("isOK", false);
-                map.put("msg", "部门不存在");
             }
+            // 始终返回 isOK=true，表示请求本身成功
+            map.put("isOK", true);
         } catch (Exception e) {
             map.put("departmentList", new ArrayList<>());
             map.put("isOK", false);

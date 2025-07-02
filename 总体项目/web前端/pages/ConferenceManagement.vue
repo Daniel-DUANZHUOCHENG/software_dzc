@@ -36,7 +36,12 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55"></el-table-column>
-      <el-table-column prop="conferencename" label="会议名称" width="160"></el-table-column>
+      <el-table-column prop="conferencename" label="会议名称" width="180">
+        <template v-slot="scope">
+          <span>{{ scope.row.conferencename }}</span>
+          <el-tag v-if="scope.row.canJoin" type="success" size="small" style="margin-left:4px;">待入会</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="creator" label="创建人" width="120"></el-table-column>
       <el-table-column label="会议状态" width="120">
         <template v-slot="scope">
@@ -90,7 +95,7 @@
             </el-button>
             <!-- 普通用户可以申请入会，企业管理员可以审批入会 -->
             <el-button 
-              v-if="isRegularUser && !isOwnCompanyMeeting(scope.row)" 
+              v-if="isRegularUser && !isOwnCompanyMeeting(scope.row) && scope.row.state !== '已结束'" 
               type="link" 
               size="small" 
               @click="applyToJoinMeeting(scope.row)"
@@ -549,7 +554,7 @@ export default {
     const currentApplication = ref({});
     
     // 用户权限状态
-          const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const isRegularUser = userInfo.role === 'User';
     const isTenantAdmin = userInfo.role === 'TAdmin';
     const isSystemAdmin = userInfo.role === 'Admin';
@@ -590,7 +595,27 @@ export default {
       loading.value = true;
       try {
         const response = await axios.get('http://localhost:9049/conferences');
-        meetings.value = response.data.meetings;
+        let list = response.data.meetings || [];
+
+        // 对普通用户，查自己已通过的申请；管理员不需要
+        let approvedIds = [];
+        if (userInfo.role === 'User') {
+          try {
+            const { data } = await axios.get(`http://localhost:9049/api/meeting-applications/applicant/${userInfo.id}`);
+            if (data.success && data.applications) {
+              approvedIds = data.applications.filter(a => a.status === 'approved').map(a => a.meetingId);
+            }
+          } catch (err) {
+            console.error('获取用户申请失败:', err);
+          }
+        }
+
+        list = list.map(m => {
+          m.canJoin = (m.tenantID === userInfo.tenantId) || approvedIds.includes(m.conferenceID);
+          return m;
+        });
+
+        meetings.value = list;
         total.value = response.data.total;
       } catch (error) {
         ElMessage.error('获取会议数据失败');
@@ -1336,8 +1361,6 @@ export default {
           return 'info';
       }
     };
-
-
 
     const resetForm = () => {
       formData.value = {

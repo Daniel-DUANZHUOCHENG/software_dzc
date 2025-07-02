@@ -74,10 +74,16 @@
           <el-row :gutter="20">
             <el-col :span="6">
               <el-select v-model="currentType" placeholder="选择类型" @change="handleTypeChange">
-                <el-option label="全部" value="all"></el-option>
-                <el-option label="课程" value="course"></el-option>
-                <el-option label="会议" value="conference"></el-option>
-                <el-option label="资讯" value="information"></el-option>
+                <template v-if="!isTenantAdmin">
+                  <el-option label="全部" value="all"></el-option>
+                  <el-option label="课程" value="course"></el-option>
+                  <el-option label="会议" value="conference"></el-option>
+                  <el-option label="资讯" value="information"></el-option>
+                  <el-option label="会议申请" value="application"></el-option>
+                </template>
+                <template v-else>
+                  <el-option label="会议申请" value="application"></el-option>
+                </template>
               </el-select>
             </el-col>
             <el-col :span="6">
@@ -341,7 +347,9 @@ import axios from '../utils/request.js'
 // 响应式数据
 const loading = ref(false)
 const submitting = ref(false)
-const currentType = ref('all')
+const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+const isTenantAdmin = user.role === 'TAdmin'
+const currentType = ref(isTenantAdmin ? 'application' : 'all')
 const currentStatus = ref('pending')
 const searchKeyword = ref('')
 const currentPage = ref(1)
@@ -376,14 +384,40 @@ const fetchData = async () => {
     approvalData.value = []
     
     // 根据类型和状态获取数据
-    if (currentType.value === 'all' || currentType.value === 'course') {
+    if (!isTenantAdmin && (currentType.value === 'all' || currentType.value === 'course')) {
       await fetchCourses()
     }
-    if (currentType.value === 'all' || currentType.value === 'conference') {
+    if (!isTenantAdmin && (currentType.value === 'all' || currentType.value === 'conference')) {
       await fetchConferences()
     }
-    if (currentType.value === 'all' || currentType.value === 'information') {
+    if (!isTenantAdmin && (currentType.value === 'all' || currentType.value === 'information')) {
       await fetchInformation()
+    }
+    
+    // 会议申请
+    if (currentType.value === 'application') {
+      let url = ''
+      if (user.role === 'Admin') {
+        url = 'http://localhost:9049/api/meeting-applications/status/pending'
+      } else {
+        url = `http://localhost:9049/api/meeting-applications/tenant/${user.tenantId}/pending`
+      }
+      const { data } = await axios.get(url)
+      if (data.success) {
+        approvalData.value = (data.applications || []).map(app => ({
+          id: app.id,
+          type: 'application',
+          title: app.meetingName || `会议 ${app.meetingId}`,
+          description: app.applicantCompany,
+          creator: app.applicantName,
+          approvalStatus: app.status,
+          rejectionReason: app.rejectionReason,
+          createTime: app.applicationTime,
+          coverImage: null,
+          content: '',
+          originalData: app
+        }))
+      }
     }
     
     await fetchStats()
@@ -466,7 +500,7 @@ const fetchConferences = async () => {
 
 const fetchInformation = async () => {
   try {
-    let url = 'http://localhost:9049/information'
+    let url = 'http://localhost:9049/api/information'
     if (currentStatus.value !== 'all') {
       url += `/status/${currentStatus.value}`
     } else {
@@ -506,19 +540,19 @@ const fetchStats = async () => {
     const [courseStats, conferenceStats, infoStats] = await Promise.all([
       axios.get('http://localhost:9049/api/courses/status/pending').catch(() => ({ data: { courses: [] } })),
       axios.get('http://localhost:9049/conferences/status/pending').catch(() => ({ data: { meetings: [] } })),
-      axios.get('http://localhost:9049/information/status/pending').catch(() => ({ data: { informationList: [] } }))
+      axios.get('http://localhost:9049/api/information/status/pending').catch(() => ({ data: { informationList: [] } }))
     ])
     
     const [courseApproved, conferenceApproved, infoApproved] = await Promise.all([
       axios.get('http://localhost:9049/api/courses/status/approved').catch(() => ({ data: { courses: [] } })),
       axios.get('http://localhost:9049/conferences/status/approved').catch(() => ({ data: { meetings: [] } })),
-      axios.get('http://localhost:9049/information/status/approved').catch(() => ({ data: { informationList: [] } }))
+      axios.get('http://localhost:9049/api/information/status/approved').catch(() => ({ data: { informationList: [] } }))
     ])
     
     const [courseRejected, conferenceRejected, infoRejected] = await Promise.all([
       axios.get('http://localhost:9049/api/courses/status/rejected').catch(() => ({ data: { courses: [] } })),
       axios.get('http://localhost:9049/conferences/status/rejected').catch(() => ({ data: { meetings: [] } })),
-      axios.get('http://localhost:9049/information/status/rejected').catch(() => ({ data: { informationList: [] } }))
+      axios.get('http://localhost:9049/api/information/status/rejected').catch(() => ({ data: { informationList: [] } }))
     ])
     
     totalPending.value = (courseStats.data.courses?.length || 0) + 
@@ -585,10 +619,18 @@ const approve = async (item: any) => {
     })
     
     const url = getApprovalUrl(item)
-    await axios.post(url, {
-      approvalStatus: 'approved',
-      rejectionReason: null
-    })
+    const payload = item.type === 'application'
+      ? {
+          status: 'approved',
+          rejectionReason: null,
+          approverId: user.id,
+          approverName: user.username
+        }
+      : {
+          approvalStatus: 'approved',
+          rejectionReason: null
+        }
+    await axios.post(url, payload)
     
     ElMessage.success('审核通过成功')
     detailsVisible.value = false
@@ -616,10 +658,18 @@ const confirmReject = async () => {
   submitting.value = true
   try {
     const url = getApprovalUrl(currentItem.value)
-    await axios.post(url, {
-      approvalStatus: 'rejected',
-      rejectionReason: rejectForm.value.reason
-    })
+    const payload = currentItem.value.type === 'application'
+      ? {
+          status: 'rejected',
+          rejectionReason: rejectForm.value.reason,
+          approverId: user.id,
+          approverName: user.username
+        }
+      : {
+          approvalStatus: 'rejected',
+          rejectionReason: rejectForm.value.reason
+        }
+    await axios.post(url, payload)
     
     ElMessage.success('审核拒绝成功')
     rejectVisible.value = false
@@ -640,7 +690,9 @@ const getApprovalUrl = (item: any) => {
     case 'conference':
       return `http://localhost:9049/conferences/${item.id}/approve`
     case 'information':
-      return `http://localhost:9049/information/${item.id}/approve`
+      return `http://localhost:9049/api/information/${item.id}/approve`
+    case 'application':
+      return `http://localhost:9049/api/meeting-applications/${item.id}/approve`
     default:
       throw new Error('未知的审核类型')
   }

@@ -415,19 +415,7 @@ export default {
       return false;
     },
     fetchInformation() {
-      // 根据用户角色获取不同的资讯数据
-      let apiUrl = '/api/information';
-      
-      if (this.isSystemAdmin) {
-        // 系统管理员获取所有资讯
-        apiUrl = '/api/information';
-      } else if (this.isTenantAdmin) {
-        // 租户管理员获取本租户的资讯
-        apiUrl = `/api/information/tenant/${this.currentUser.tenantId}`;
-      } else {
-        // 普通用户可以查看所有已发布的资讯，但不能进行管理操作
-        apiUrl = '/api/information';
-      }
+      const apiUrl = '/api/information';
 
       axios.get(apiUrl)
           .then(response => {

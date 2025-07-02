@@ -230,8 +230,6 @@ public class MeetingApplicationController {
         }
     }
 
-
-
     /**
      * 获取待审批的申请数量
      */
@@ -248,6 +246,26 @@ public class MeetingApplicationController {
             response.put("success", false);
             response.put("message", "获取待审批数量失败：" + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 租户管理员获取本租户全部待审批申请
+     */
+    @GetMapping("/tenant/{tenantId}/pending")
+    public ResponseEntity<Map<String, Object>> getTenantPendingApplications(@PathVariable Integer tenantId) {
+        try {
+            List<MeetingApplication> list = meetingApplicationService.getTenantPendingApplications(tenantId);
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("applications", list);
+            resp.put("total", list.size());
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", false);
+            resp.put("message", "获取申请列表失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resp);
         }
     }
 

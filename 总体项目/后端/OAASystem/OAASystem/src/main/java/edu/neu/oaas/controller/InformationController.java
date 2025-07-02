@@ -54,9 +54,23 @@ public class InformationController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, String>> updateInformation(@PathVariable int id, @RequestBody Information information) {
+    public ResponseEntity<Map<String, String>> updateInformation(@PathVariable int id,
+                                                                @RequestBody Information information,
+                                                                @RequestHeader(value = "User-Role", required = false) String userRole,
+                                                                @RequestHeader(value = "User-Tenant-Id", required = false) String userTenantId) {
         try {
             information.setId(id);
+
+            // 如果是租户管理员，只允许修改本租户的资讯
+            if ("TAdmin".equals(userRole) && userTenantId != null) {
+                Information original = informationService.getInformationById(id);
+                if (original == null || original.getTenantId() != Integer.parseInt(userTenantId)) {
+                    Map<String, String> denied = new HashMap<>();
+                    denied.put("message", "权限不足，只能修改本租户资讯");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(denied);
+                }
+            }
+
             int result = informationService.updateInformation(information);
             Map<String, String> response = new HashMap<>();
             if (result > 0) {
@@ -73,8 +87,20 @@ public class InformationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteInformation(@PathVariable int id) {
+    public ResponseEntity<Map<String, String>> deleteInformation(@PathVariable int id,
+                                                                @RequestHeader(value = "User-Role", required = false) String userRole,
+                                                                @RequestHeader(value = "User-Tenant-Id", required = false) String userTenantId) {
         try {
+            // 如果是租户管理员，先检查资讯属于本租户
+            if ("TAdmin".equals(userRole) && userTenantId != null) {
+                Information info = informationService.getInformationById(id);
+                if (info == null || info.getTenantId() != Integer.parseInt(userTenantId)) {
+                    Map<String, String> denied = new HashMap<>();
+                    denied.put("message", "权限不足，只能删除本租户资讯");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(denied);
+                }
+            }
+
             informationService.deleteInformation(id);
             Map<String, String> response = new HashMap<>();
             response.put("message", "资讯删除成功");

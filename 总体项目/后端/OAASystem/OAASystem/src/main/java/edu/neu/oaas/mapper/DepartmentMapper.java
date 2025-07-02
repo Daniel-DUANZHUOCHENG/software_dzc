@@ -17,8 +17,8 @@ public interface DepartmentMapper {
     @Select("SELECT * FROM departments")
     List<Department> findAll();
 
-    @Select("SELECT * FROM departments WHERE Id = #{Id}")
-    Department getDepartmentById(int departmentId);
+    @Select("SELECT * FROM departments WHERE Id = #{departmentId}")
+    Department getDepartmentById(@Param("departmentId") int departmentId);
 
     @Select("SELECT * FROM departments WHERE TenantId = #{tenantId}")
     List<Department> getDepartmentsByTenantId(int tenantId);
@@ -47,8 +47,8 @@ public interface DepartmentMapper {
 //        List<Department> getAllDepartments();
 
 
-    @Delete("DELETE FROM departments WHERE Id = #{Id}")
-    int deleteDepartment(int departmentId);
+    @Delete("DELETE FROM departments WHERE Id = #{departmentId}")
+    int deleteDepartment(@Param("departmentId") int departmentId);
 
 
 

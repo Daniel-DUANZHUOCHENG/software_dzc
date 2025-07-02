@@ -177,7 +177,7 @@ const checkAuth = (to, from, next) => {
   }
   
   // 如果目标路由需要管理员权限
-  if (to.meta.requireAdmin && userInfo.role !== 'Admin') {
+  if (to.meta.requireAdmin && !(userInfo.role === 'Admin' || userInfo.role === 'TAdmin')) {
     next('/home') // 重定向到首页
     return
   }

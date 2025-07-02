@@ -441,10 +441,18 @@ const fetchDepartmentData = async () => {
         params: { tenantId: user.tenantId }
       })
     } else {
-      // 备用方案：根据部门ID获取
-      response = await axios.get('http://localhost:9049/departments', {
-        params: { departementId: user.departmentId }
+      // 获取所属部门
+      response = await axios.get('http://localhost:9049/departments/getByDepartmentId', {
+        params: { departmentId: user.departmentId }
       })
+
+      // 额外获取当前租户信息，用于在树中展示公司层级
+      try {
+        const tenantRes = await axios.get(`http://localhost:9049/api/tenants/${user.tenantId}`)
+        console.log('👤 普通用户：获取部门', user.departmentId, '的信息')
+      } catch (err) {
+        console.warn('获取租户信息失败，但继续构建部门树', err)
+      }
     }
 
     let rawData = []

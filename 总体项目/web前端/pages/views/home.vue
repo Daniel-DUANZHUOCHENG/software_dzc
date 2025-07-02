@@ -297,9 +297,9 @@
           class="member-card" 
           v-for="(tenant, index) in tenants" 
           :key="index" 
-          @click="isSystemAdmin ? goToTenantDetail(tenant.id) : null"
-          :class="{ 'clickable': isSystemAdmin, 'disabled': !isSystemAdmin }"
-          :style="{ cursor: isSystemAdmin ? 'pointer' : 'not-allowed' }"
+          @click="canClickTenant(tenant.id) ? goToTenantDetail(tenant.id) : null"
+          :class="{ 'clickable': canClickTenant(tenant.id), 'disabled': !canClickTenant(tenant.id) }"
+          :style="{ cursor: canClickTenant(tenant.id) ? 'pointer' : 'not-allowed' }"
         >
           <div class="member-avatar">
             <img 
@@ -316,7 +316,7 @@
               <span>活跃成员</span>
             </div>
           </div>
-          <div v-if="!isSystemAdmin" class="access-restricted">
+          <div v-if="!canClickTenant(tenant.id)" class="access-restricted">
             <el-icon><Lock /></el-icon>
           </div>
         </div>
@@ -377,7 +377,8 @@ const router = useRouter()
 // 用户权限控制
 const userRole = ref('')
 const isSystemAdmin = computed(() => userRole.value === 'Admin')
-const isAdminOrTAdmin = computed(() => userRole.value === 'Admin' || userRole.value === 'TAdmin')
+const isTenantAdmin = computed(() => userRole.value === 'TAdmin')
+const isAdminOrTAdmin = computed(() => isSystemAdmin.value || isTenantAdmin.value)
 const isRegularUser = computed(() => userRole.value === 'User')
 
 const carouselImages = ref([
@@ -391,6 +392,8 @@ const editDialogVisible = ref(false)
 const fileList = ref<any[]>([])
 const formData = ref({})
 const isDarkMode = ref(false)
+
+const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
 
 // 数据分析相关数据
 const totalUsers = ref(0)
@@ -457,7 +460,9 @@ const fetchTenants = async () => {
   try {
     const response = await axios.get('/api/tenants/all')
     if (response.data && response.data.tenantList) {
-      tenants.value = response.data.tenantList
+      let list = response.data.tenantList
+
+      tenants.value = list
     }
   } catch (error) {
     console.error('获取租户列表失败:', error)
@@ -1092,6 +1097,13 @@ onBeforeUnmount(() => {
   decrementOnlineUsers()
   updateRealTimeVisitors()
 })
+
+// helper function to decide click permission
+const canClickTenant = (tenantId: string | number | undefined) => {
+  if (isSystemAdmin.value) return true
+  if (isTenantAdmin.value) return tenantId === currentUser.tenantId
+  return false
+}
 </script>
 
 <style scoped>

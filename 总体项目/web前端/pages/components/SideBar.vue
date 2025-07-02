@@ -75,6 +75,13 @@
       </router-link>
     </el-menu-item>
 
+    <!-- 系统设置 - 所有角色可见 -->
+    <el-menu-item index="13">
+      <router-link to="/system-settings">
+        <el-icon><Setting /></el-icon> 系统设置
+      </router-link>
+    </el-menu-item>
+
     <!-- 普通用户专用菜单项 -->
     <div v-if="isRegularUser" class="user-menu-divider">
       <div class="divider-text">个人功能</div>
@@ -98,7 +105,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue';
-import { House, User, OfficeBuilding, UserFilled, Notebook, Document, Calendar, TrendCharts, Check, Reading } from '@element-plus/icons-vue';
+import { House, User, OfficeBuilding, UserFilled, Notebook, Document, Calendar, TrendCharts, Check, Reading, Setting } from '@element-plus/icons-vue';
 
 const userRole = ref('');
 

@@ -390,7 +390,7 @@ export default {
       try {
         // 从localStorage获取用户信息
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const isAdmin = userInfo.role === 'admin' || userInfo.role === 'superadmin';
+        const isAdmin = userInfo.role === 'Admin';
         const currentUserId = userInfo.id;
         const currentTenantId = userInfo.tenantId;
         
@@ -409,18 +409,15 @@ export default {
           allCourses = response.data.courses || [];
           console.log('📋 管理员用户，获取所有课程:', allCourses.length, '门');
         } else {
-          // 普通用户：获取已审核通过的课程 + 自己创建的所有课程
           try {
-            // 获取已审核通过的课程
+            // 1) 获取已审核通过的课程（所有人可见）
             const approvedResponse = await axios.get('http://localhost:9049/api/courses/status/approved');
             const approvedCourses = approvedResponse.data.courses || [];
-            
-            // 获取所有课程，然后筛选出自己创建的
+
+            // 2) 获取自己创建的课程（所有状态）
             const allCoursesResponse = await axios.get('http://localhost:9049/api/courses');
             const userOwnCourses = (allCoursesResponse.data.courses || []).filter(course => 
-              course.tenantID === currentTenantId || 
-              course.owner === userInfo.username ||
-              course.owner === userInfo.name
+              course.owner === userInfo.username || course.owner === userInfo.nickname
             );
             
             // 合并并去重（以courseID为准）
@@ -445,7 +442,6 @@ export default {
             });
           } catch (error) {
             console.error('获取普通用户课程失败:', error);
-            // 如果出错，至少尝试获取已审核通过的课程
             const response = await axios.get('http://localhost:9049/api/courses/status/approved');
             allCourses = response.data.courses || [];
           }

@@ -173,13 +173,38 @@
           </div>
 
           <!-- 通知按钮 -->
-          <div class="notification-btn">
-            <el-badge :value="3" class="notification-badge">
-              <div class="notification-icon">
-                <el-icon><Bell /></el-icon>
+          <el-popover placement="bottom" width="300" trigger="click">
+            <template #reference>
+              <div class="notification-btn" @click="fetchNotifications">
+                <el-badge :value="unreadCount" class="notification-badge" :hidden="unreadCount === 0">
+                  <div class="notification-icon">
+                    <el-icon><Bell /></el-icon>
+                  </div>
+                </el-badge>
               </div>
-            </el-badge>
-          </div>
+            </template>
+
+            <div v-if="notifications.length === 0" style="text-align:center;padding:20px;color:#999;">
+              暂无通知
+            </div>
+            <el-scrollbar v-else style="max-height:220px;">
+              <el-timeline>
+                <el-timeline-item
+                  v-for="item in notifications"
+                  :key="item.id"
+                  :timestamp="formatDate(item.applicationTime)"
+                  :type="item.type==='pending' ? 'warning' : (item.status==='approved' ? 'success' : 'danger')"
+                >
+                  <template v-if="item.type==='pending'">
+                    用户 <b>{{ item.applicantName }}</b> 申请加入 <b>{{ item.meetingName }}</b>
+                  </template>
+                  <template v-else>
+                    您申请加入 <b>{{ item.meetingName }}</b> 已被 {{ item.status === 'approved' ? '批准' : '拒绝' }}
+                  </template>
+                </el-timeline-item>
+              </el-timeline>
+            </el-scrollbar>
+          </el-popover>
 
           <!-- 用户信息区域 -->
           <el-dropdown trigger="click" @command="handleUserCommand" popper-class="user-dropdown">
@@ -396,6 +421,9 @@ const handleUserCommand = (command: string) => {
     case 'profile':
       router.push('/user-profile')
       break
+    case 'settings':
+      router.push('/system-settings')
+      break
     case 'logout':
       localStorage.removeItem('userId')
               localStorage.removeItem('userInfo')
@@ -444,6 +472,40 @@ const toggleTheme = () => {
   }))
   
   console.log('主题已切换为:', isDarkMode.value ? '深色模式' : '浅色模式')
+}
+
+// 通知相关状态
+const notifications = ref([])
+const unreadCount = ref(0)
+
+const fetchNotifications = async () => {
+  const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  try {
+    if (user.role === 'TAdmin') {
+      const { data } = await axios.get(`/api/meeting-applications/tenant/${user.tenantId}/pending`)
+      notifications.value = (data.applications || []).map(a=>({
+        ...a,
+        type:'pending',
+        meetingName: a.meetingName || a.conferenceName || a.conferencename || ''
+      }))
+      unreadCount.value = notifications.value.length
+    } else if (user.role === 'User') {
+      const { data } = await axios.get(`/api/meeting-applications/applicant/${user.id}`)
+      notifications.value = (data.applications || []).filter(a=>a.status!=='pending').map(a=>({
+        ...a,
+        type:'result',
+        meetingName: a.meetingName || a.conferenceName || a.conferencename || ''
+      }))
+      unreadCount.value = notifications.value.length
+    }
+  } catch(e){ console.error('通知拉取失败',e)}
+}
+
+onMounted(()=>{ fetchNotifications(); setInterval(fetchNotifications,15000) })
+
+const formatDate = (dt)=>{
+  if(!dt) return ''
+  return new Date(dt).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
 }
 </script>
 
