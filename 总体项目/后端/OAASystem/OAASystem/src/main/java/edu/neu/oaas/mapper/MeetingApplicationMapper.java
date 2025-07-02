@@ -15,7 +15,7 @@ public interface MeetingApplicationMapper {
     int insertMeetingApplication(MeetingApplication application);
 
     // 检查是否已经申请过
-    @Select("SELECT COUNT(*) FROM meeting_application WHERE meetingId = #{meetingId} AND applicantId = #{applicantId}")
+    @Select("SELECT COUNT(*) FROM meeting_application WHERE meetingId = #{meetingId} AND applicantId = #{applicantId} AND status != 'rejected'")
     int checkExistingApplication(@Param("meetingId") Integer meetingId, @Param("applicantId") Integer applicantId);
 
     // 根据会议ID获取申请列表

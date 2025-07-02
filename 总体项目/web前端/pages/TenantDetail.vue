@@ -112,8 +112,8 @@
         </el-row>
       </div>
 
-      <!-- 用户列表 -->
-      <div class="users-section">
+      <!-- 用户列表 - 管理员和租户管理员可见 -->
+      <div v-if="!isRegularUser" class="users-section">
         <el-card class="users-card">
           <template #header>
             <div class="card-header">
@@ -184,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
   ArrowLeft, Edit, User, Phone, Calendar, OfficeBuilding, Refresh, Delete 
@@ -205,6 +205,9 @@ const meetingCount = ref(0)
 const isAdmin = ref(false)
 const imagePreviewVisible = ref(false)
 const previewImageUrl = ref('')
+
+const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
+const isRegularUser = computed(() => currentUser.role === 'User')
 
 onMounted(() => {
   const userId = localStorage.getItem('userId')

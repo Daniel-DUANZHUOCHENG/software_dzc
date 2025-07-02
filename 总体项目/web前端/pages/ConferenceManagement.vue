@@ -95,7 +95,7 @@
             </el-button>
             <!-- 普通用户可以申请入会，企业管理员可以审批入会 -->
             <el-button 
-              v-if="isRegularUser && !isOwnCompanyMeeting(scope.row) && scope.row.state !== '已结束'" 
+              v-if="isRegularUser && !isOwnCompanyMeeting(scope.row) && scope.row.state !== '已结束' && !scope.row.hasPendingApplication && !scope.row.canJoin" 
               type="link" 
               size="small" 
               @click="applyToJoinMeeting(scope.row)"
@@ -597,21 +597,24 @@ export default {
         const response = await axios.get('http://localhost:9049/conferences');
         let list = response.data.meetings || [];
 
-        // 对普通用户，查自己已通过的申请；管理员不需要
-        let approvedIds = [];
+        let userApplications = [];
         if (userInfo.role === 'User') {
           try {
             const { data } = await axios.get(`http://localhost:9049/api/meeting-applications/applicant/${userInfo.id}`);
             if (data.success && data.applications) {
-              approvedIds = data.applications.filter(a => a.status === 'approved').map(a => a.meetingId);
+              userApplications = data.applications;
             }
           } catch (err) {
             console.error('获取用户申请失败:', err);
           }
         }
 
+        const approvedIds = userApplications.filter(a => a.status === 'approved').map(a => a.meetingId);
+        const pendingIds = userApplications.filter(a => a.status === 'pending').map(a => a.meetingId);
+
         list = list.map(m => {
           m.canJoin = (m.tenantID === userInfo.tenantId) || approvedIds.includes(m.conferenceID);
+          m.hasPendingApplication = pendingIds.includes(m.conferenceID);
           return m;
         });
 
@@ -1146,6 +1149,7 @@ export default {
 
         if (response.data.success) {
           ElMessage.success('申请提交成功，等待企业管理员审批');
+          meeting.hasPendingApplication = true;
         } else {
           ElMessage.error(response.data.message || '申请提交失败');
         }

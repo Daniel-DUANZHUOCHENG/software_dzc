@@ -199,7 +199,11 @@
                     用户 <b>{{ item.applicantName }}</b> 申请加入 <b>{{ item.meetingName }}</b>
                   </template>
                   <template v-else>
-                    您申请加入 <b>{{ item.meetingName }}</b> 已被 {{ item.status === 'approved' ? '批准' : '拒绝' }}
+                    您申请加入 <b>{{ item.meetingName }}</b> 已被
+                    <span :style="{color: item.status==='approved' ? '#67C23A' : '#F56C6C'}">
+                      {{ item.status === 'approved' ? '批准' : '拒绝' }}
+                    </span>
+                    <span v-if="item.status==='rejected' && item.rejectionReason"> ：{{ item.rejectionReason }}</span>
                   </template>
                 </el-timeline-item>
               </el-timeline>
@@ -486,7 +490,8 @@ const fetchNotifications = async () => {
       notifications.value = (data.applications || []).map(a=>({
         ...a,
         type:'pending',
-        meetingName: a.meetingName || a.conferenceName || a.conferencename || ''
+        meetingName: a.meetingName || a.conferenceName || a.conferencename || '',
+        rejectionReason: a.rejectionReason || ''
       }))
       unreadCount.value = notifications.value.length
     } else if (user.role === 'User') {
@@ -494,7 +499,8 @@ const fetchNotifications = async () => {
       notifications.value = (data.applications || []).filter(a=>a.status!=='pending').map(a=>({
         ...a,
         type:'result',
-        meetingName: a.meetingName || a.conferenceName || a.conferencename || ''
+        meetingName: a.meetingName || a.conferenceName || a.conferencename || '',
+        rejectionReason: a.rejectionReason || ''
       }))
       unreadCount.value = notifications.value.length
     }

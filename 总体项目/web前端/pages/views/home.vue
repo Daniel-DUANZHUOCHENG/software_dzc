@@ -1102,6 +1102,7 @@ onBeforeUnmount(() => {
 const canClickTenant = (tenantId: string | number | undefined) => {
   if (isSystemAdmin.value) return true
   if (isTenantAdmin.value) return tenantId === currentUser.tenantId
+  if (isRegularUser.value) return tenantId === currentUser.tenantId
   return false
 }
 </script>
