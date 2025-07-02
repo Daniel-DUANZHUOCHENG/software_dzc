@@ -93,7 +93,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testInsertUser() throws Exception {
+    public void 
+    testInsertUser() throws Exception {
         when(userService.getUserByName("testuser")).thenReturn(null);
         when(userService.insertUser(any(User.class))).thenReturn(true);
 

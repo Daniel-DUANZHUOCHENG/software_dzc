@@ -52,7 +52,7 @@
           <template #header>
             <div class="tree-header">
               <span class="tree-title">部门组织架构</span>
-              <div class="tree-actions">
+              <div class="tree-actions" v-if="currentUserRole !== 'User'">
                 <el-button type="primary" size="small" @click="handleAddDepartment">
                   <el-icon><Plus /></el-icon>
                   新增
@@ -97,7 +97,7 @@
               <span class="detail-title">
                 {{ selectedDepartment ? `${selectedDepartment.departmentName} - 部门详情` : '部门详情' }}
               </span>
-              <div class="detail-actions" v-if="selectedDepartment">
+              <div class="detail-actions" v-if="selectedDepartment && currentUserRole !== 'User'">
                 <el-button type="primary" size="small" @click="handleAddChild(selectedDepartment)">
                   <el-icon><Plus /></el-icon>
                   新增子部门
@@ -155,7 +155,7 @@
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="150">
+                <el-table-column label="操作" width="150" v-if="currentUserRole !== 'User'">
                   <template #default="{ row }">
                     <el-button type="text" size="small" @click="handleNodeClick(row)">
                       查看
@@ -175,7 +175,7 @@
           <!-- 未选择部门时的提示 -->
           <div class="empty-content" v-else>
             <el-empty description="请在左侧选择一个部门查看详情">
-              <el-button type="primary" @click="handleAddDepartment">新增部门</el-button>
+              <el-button type="primary" @click="handleAddDepartment" v-if="currentUserRole !== 'User'">新增部门</el-button>
             </el-empty>
           </div>
         </el-card>
@@ -290,7 +290,7 @@ import {
   OfficeBuilding, Expand, Fold, Folder
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+import axios from '../utils/request.js'
 
 // 接口类型定义
 interface Department {
@@ -358,6 +358,12 @@ const treeProps = {
   label: 'departmentName'
 }
 
+// 计算属性 - 获取当前用户角色
+const currentUserRole = computed(() => {
+  const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  return user.role || 'User'
+})
+
 // 计算树形数据
 const treeData = computed(() => {
   return tableData.value
@@ -421,16 +427,36 @@ onMounted(() => {
 const fetchDepartmentData = async () => {
   tableLoading.value = true
   try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const departmentId = user.departmentId
+    const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    let response
+
+    if (user.role === 'Admin') {
+      // 系统管理员：获取所有部门
+      response = await axios.get('http://localhost:9049/departments/getall', {
+        params: { path: '' }
+      })
+    } else if (user.role === 'TAdmin' || user.role === 'User') {
+      // 租户管理员和普通用户：获取本租户的所有部门
+      response = await axios.get('http://localhost:9049/departments/getByTenantId', {
+        params: { tenantId: user.tenantId }
+      })
+    } else {
+      // 备用方案：根据部门ID获取
+      response = await axios.get('http://localhost:9049/departments', {
+        params: { departementId: user.departmentId }
+      })
+    }
+
+    let rawData = []
+    if (response.data.isOK) {
+      rawData = response.data.departmentList || []
+    } else {
+      rawData = response.data || []
+    }
     
-    const response = await axios.get('http://localhost:9049/departments', {
-      params: { departementId: departmentId }
-    })
-    
-    const rawData = response.data || []
     tableData.value = buildDepartmentHierarchy(rawData)
     totalCount.value = rawData.length
+    console.log(`📋 获取部门数据成功，用户角色: ${user.role}，部门数量: ${rawData.length}`)
   } catch (error) {
     console.error('获取部门数据失败:', error)
     ElMessage.error('获取部门数据失败')
@@ -468,20 +494,41 @@ const buildDepartmentHierarchy = (departments: any[]): Department[] => {
 const handleSearch = async () => {
   searchLoading.value = true
   try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const departmentId = user.departmentId
-    
-    const response = await axios.get('http://localhost:9049/departments/search', {
-      params: {
-        departmentName: searchForm.value.departmentName || undefined,
-        status: searchForm.value.status || undefined,
-        departementId: departmentId
-      }
-    })
+    const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    let response
+
+    if (user.role === 'Admin') {
+      // 系统管理员：搜索所有部门
+      response = await axios.get('http://localhost:9049/departments/search', {
+        params: {
+          departmentName: searchForm.value.departmentName || undefined,
+          status: searchForm.value.status || undefined
+        }
+      })
+    } else if (user.role === 'TAdmin' || user.role === 'User') {
+      // 租户管理员和普通用户：搜索本租户的部门
+      response = await axios.get('http://localhost:9049/departments/search', {
+        params: {
+          departmentName: searchForm.value.departmentName || undefined,
+          status: searchForm.value.status || undefined,
+          tenantId: user.tenantId
+        }
+      })
+    } else {
+      // 备用方案：根据部门ID搜索
+      response = await axios.get('http://localhost:9049/departments/search', {
+        params: {
+          departmentName: searchForm.value.departmentName || undefined,
+          status: searchForm.value.status || undefined,
+          departementId: user.departmentId
+        }
+      })
+    }
     
     const rawData = response.data.departmentList || []
     tableData.value = buildDepartmentHierarchy(rawData)
     totalCount.value = rawData.length
+    console.log(`🔍 搜索部门成功，用户角色: ${user.role}，找到 ${rawData.length} 个部门`)
   } catch (error) {
     console.error('搜索部门失败:', error)
     ElMessage.error('搜索部门失败')
@@ -591,7 +638,7 @@ const handleSubmit = async () => {
   submitLoading.value = true
   
   try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
     
     if (isEdit.value) {
       // 修改部门

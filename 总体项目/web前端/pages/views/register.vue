@@ -92,7 +92,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '../../utils/request.js'
 import { ElMessage } from 'element-plus'
 import Identify from "../../pages/components/Identify.vue";
 
@@ -210,11 +210,11 @@ const login = () => {
   localStorage.removeItem('userId');
   localStorage.removeItem('tenantId');
   localStorage.removeItem('userRole');
-  localStorage.removeItem('user');
+  localStorage.removeItem('userInfo');
   params.username = form.value.username;
   params.password = form.value.password;
   
-  axios.post('http://localhost:9049/users/login', params)
+  axios.post('/users/login', params)
     .then(response => {
       message.value = response.data.message
       localStorage.setItem('userId', response.data.userId)
@@ -222,7 +222,7 @@ const login = () => {
       localStorage.setItem('userId', userData.id)
       localStorage.setItem('userRole', userData.role) // 存储用户角色
       localStorage.setItem('tenantId', userData.tenantId) // 如果有租户ID
-      localStorage.setItem('user', JSON.stringify(userData))
+      localStorage.setItem('userInfo', JSON.stringify(userData))
       setTimeout(() => {
         router.push('/home')
       }, 1000)
@@ -264,7 +264,7 @@ const register = () => {
     department: departmentForm.value,
     user: userForm.value
   }
-  axios.post('http://localhost:9049/tenants/insert', requestData)
+  axios.post('/api/tenants/insert', requestData)
     .then(response => {
       if (response.data.isOK) {
         ElMessage.success('注册成功')
@@ -298,7 +298,7 @@ const resetForms = () => {
     departmentName: '',
     status: 'Active',
     createdAt: '',
-    parentDepartment: null,
+    parentDepartment: 1,
     manager: '',
     managerPhone: '',
     managerEmail: '',

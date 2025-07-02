@@ -2,13 +2,15 @@ package edu.neu.oaas.pojo;
 
 public class Course {
     private Integer courseID;
-    private  String coursename;
+    private String coursename;
     private String coverpath;
     private String courseintro;
     private String number;
     private String videopath;
     private String owner;
     private Integer tenantID;
+    private String approvalStatus;
+    private String rejectionReason;
 
     public Course(Integer courseID, String coursename, String coverpath, String courseintro, String number, String videopath, String owner, Integer tenantID) {
         this.courseID = courseID;
@@ -19,6 +21,7 @@ public class Course {
         this.videopath = videopath;
         this.owner = owner;
         this.tenantID = tenantID;
+        this.approvalStatus = "pending";
     }
 
     public String getCoursename() {
@@ -30,6 +33,7 @@ public class Course {
     }
 
     public Course() {
+        this.approvalStatus = "pending";
     }
 
     public Integer getCourseID() {
@@ -64,8 +68,6 @@ public class Course {
         this.courseintro = courseintro;
     }
 
-
-
     public String getVideopath() {
         return videopath;
     }
@@ -88,5 +90,21 @@ public class Course {
 
     public void setTenantID(Integer tenantID) {
         this.tenantID = tenantID;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 }

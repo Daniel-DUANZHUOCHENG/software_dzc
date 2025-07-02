@@ -165,29 +165,54 @@ public class UserService {
 //        return BCrypt.hashpw(password, BCrypt.gensalt());
 //    }
 
-    private static final String UPLOAD_DIR = "D:/avatar/";
+    private static final String PROJECT_PATH = System.getProperty("user.dir");
+    private static final String UPLOAD_DIR = PROJECT_PATH + "/avatar/";
     private static final String DEFAULT_AVATAR = "/avatar/default.jpg"; // 默认头像路径
 
 
     public String saveAvatar(MultipartFile file, int userId) throws IOException {
+        System.out.println("🔍 开始保存头像 - 用户ID: " + userId + ", 上传目录: " + UPLOAD_DIR);
+        
         User user = userMapper.getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+
+        // 确保上传目录存在
+        Path uploadDirPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadDirPath)) {
+            System.out.println("📁 创建头像上传目录: " + UPLOAD_DIR);
+            Files.createDirectories(uploadDirPath);
+        }
 
         // Delete old avatar if it exists and is not the default avatar
         if (user.getAvatar() != null && !user.getAvatar().equals(DEFAULT_AVATAR)) {
-            Path oldAvatarPath = Paths.get(UPLOAD_DIR + user.getAvatar().substring(8)); // Remove leading "/avatar/"
-            Files.deleteIfExists(oldAvatarPath);
+            try {
+                String oldFileName = user.getAvatar().substring(8); // Remove leading "/avatar/"
+                Path oldAvatarPath = Paths.get(UPLOAD_DIR, oldFileName);
+                if (Files.exists(oldAvatarPath)) {
+                    Files.delete(oldAvatarPath);
+                    System.out.println("🗑️ 删除旧头像: " + oldAvatarPath);
+                }
+            } catch (Exception e) {
+                System.err.println("⚠️ 删除旧头像失败: " + e.getMessage());
+                // 继续执行，不影响新头像保存
+            }
         }
 
         // Save new avatar
         String fileName = userId + "_avatar" + getFileExtension(file.getOriginalFilename());
         Path filePath = Paths.get(UPLOAD_DIR, fileName);
+        
+        System.out.println("💾 保存新头像到: " + filePath);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         // Update user's avatar in the database
         String avatarUrl = "/avatar/" + fileName;
         user.setAvatar(avatarUrl);
         userMapper.updateUser2(user);
-
+        
+        System.out.println("✅ 头像保存完成 - 数据库路径: " + avatarUrl);
         return avatarUrl;
     }
 

@@ -231,7 +231,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '../../utils/request.js'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Calendar, Document, Notebook } from '@element-plus/icons-vue'
 import Identify from "../../pages/components/Identify.vue"
@@ -350,33 +350,81 @@ const login = async () => {
   loading.value = true
 
   try {
-    console.log('Sending login request...')
-    const response = await axios.post('http://localhost:9049/users/login', {
+    // 先测试连接
+    console.log('🔍 测试后端连接...')
+    try {
+      const testResponse = await axios.get('/users/test')
+      console.log('✅ 后端连接测试成功:', testResponse.data)
+    } catch (testError) {
+      console.error('❌ 后端连接测试失败:', testError)
+      ElMessage.error('无法连接到服务器，请检查后端是否启动')
+      loading.value = false
+      return
+    }
+
+    console.log('🔑 发送登录请求...')
+    console.log('📤 请求数据:', {
+      username: form.value.username,
+      password: form.value.password
+    })
+    console.log('🌐 请求URL: /users/login')
+    
+    const response = await axios.post('/users/login', {
       username: form.value.username,
       password: form.value.password
     })
 
-    console.log('Login response:', response.data)
+    console.log('📥 登录响应:', response)
+    console.log('📥 响应数据:', response.data)
     
-    if (response.data.userId > 0 && response.data.user) {
-      console.log('Login successful, storing user data...')
-      localStorage.setItem('userId', response.data.userId.toString())
-      localStorage.setItem('user', JSON.stringify(response.data.user))
+    // 安全地检查响应数据
+    const responseData = response?.data
+    console.log('🔍 解析响应数据:', responseData)
+    
+    if (responseData && responseData.userId && responseData.userId > 0 && responseData.user) {
+      console.log('✅ 登录成功，存储用户数据...')
+      console.log('👤 用户信息:', responseData.user)
+      
+      localStorage.setItem('userId', responseData.userId.toString())
+      localStorage.setItem('userInfo', JSON.stringify(responseData.user))
       ElMessage.success('登录成功')
       
-      console.log('Redirecting to /home...')
+      console.log('🔄 跳转到首页...')
       await router.push('/home')
-      console.log('Redirect completed')
+      console.log('✅ 跳转完成')
     } else {
-      console.log('Login failed:', response.data.message)
-      ElMessage.error(response.data.message || '登录失败')
+      console.log('❌ 登录失败详情:', {
+        hasData: !!responseData,
+        userId: responseData?.userId,
+        hasUser: !!responseData?.user,
+        message: responseData?.message
+      })
+      ElMessage.error(responseData?.message || '登录失败，响应数据格式异常')
     }
-  } catch (error: any) {
-    console.error('Login error:', error)
-    if (error.response?.status === 401) {
-      ElMessage.error('用户名或密码错误')
+  } catch (error) {
+    console.error('💥 登录错误详情:', error)
+    console.error('💥 错误响应:', error.response)
+    console.error('💥 错误请求:', error.request)
+    console.error('💥 错误配置:', error.config)
+    
+    if (error.response) {
+      console.error('📊 响应状态:', error.response.status)
+      console.error('📊 响应数据:', error.response.data)
+      console.error('📊 响应头:', error.response.headers)
+      
+      if (error.response.status === 401) {
+        ElMessage.error('用户名或密码错误')
+      } else if (error.response.status === 500) {
+        ElMessage.error('服务器内部错误')
+      } else {
+        ElMessage.error(`请求失败 (${error.response.status}): ${error.response.data?.message || '未知错误'}`)
+      }
+    } else if (error.request) {
+      console.error('📡 请求发送但无响应:', error.request)
+      ElMessage.error('网络连接失败，请检查网络连接或后端服务状态')
     } else {
-      ElMessage.error(error.response?.data?.message || '登录失败，请检查网络连接')
+      console.error('⚙️ 请求配置错误:', error.message)
+      ElMessage.error('请求配置错误: ' + error.message)
     }
   } finally {
     loading.value = false
@@ -450,7 +498,7 @@ const register = async () => {
 
   try {
     // 创建租户
-    const tenantResponse = await axios.post('http://localhost:9049/tenants', {
+    const tenantResponse = await axios.post('/api/tenants', {
       tenantName: tenantForm.value.tenantName,
       contactPerson: tenantForm.value.contactPerson,
       phone: tenantForm.value.phone,
@@ -461,7 +509,7 @@ const register = async () => {
       const tenantId = tenantResponse.data.tenant.id
 
       // 创建用户
-      const userResponse = await axios.post('http://localhost:9049/users', {
+      const userResponse = await axios.post('/users/insert', {
         username: userForm.value.username,
         password: userForm.value.password,
         nickname: userForm.value.nickname,

@@ -10,6 +10,12 @@ public class Information {
     private String company;
     private int tenantId;
     private String path;
+    private String approvalStatus;
+    private String rejectionReason;
+
+    public Information() {
+        this.approvalStatus = "pending";
+    }
 
     // Getter and Setter methods
 
@@ -83,6 +89,22 @@ public class Information {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 }
 

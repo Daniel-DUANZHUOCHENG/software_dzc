@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class UserServiceTest {
 
     @Test
     public void testGetAllUser() {
-        when(userMapper.getAllUser()).thenReturn(List.of(user));
+        when(userMapper.getAllUser()).thenReturn(Arrays.asList(user));
         List<User> users = userService.getAllUser();
         assertFalse(users.isEmpty());
         verify(userMapper, times(1)).getAllUser();
@@ -74,7 +75,7 @@ public class UserServiceTest {
 
     @Test
     public void testFindByPath() {
-        when(userMapper.findByPathPrefix("/1")).thenReturn(List.of(user));
+        when(userMapper.findByPathPrefix("/1")).thenReturn(Arrays.asList(user));
         List<User> users = userService.findByPath("/1");
         assertFalse(users.isEmpty());
         verify(userMapper, times(1)).findByPathPrefix("/1");
@@ -169,7 +170,7 @@ public class UserServiceTest {
 
     @Test
     public void testGetUsersByPage() {
-        when(userMapper.getUsersByPage(anyInt(), anyInt())).thenReturn(List.of(user));
+        when(userMapper.getUsersByPage(anyInt(), anyInt())).thenReturn(Arrays.asList(user));
         when(userMapper.getTotalUserCount()).thenReturn(1);
 
         Map<String, Object> result = userService.getUsersByPage(1, 10);

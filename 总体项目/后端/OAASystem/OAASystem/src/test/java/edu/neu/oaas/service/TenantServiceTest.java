@@ -18,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,7 +82,7 @@ public class TenantServiceTest {
 
     @Test
     public void testGetAll() {
-        when(tenantMapper.getAll()).thenReturn(List.of(tenant));
+        when(tenantMapper.getAll()).thenReturn(Arrays.asList(tenant));
         List<Tenant> tenants = tenantService.getAll();
         assertFalse(tenants.isEmpty());
         verify(tenantMapper, times(1)).getAll();
@@ -89,7 +90,7 @@ public class TenantServiceTest {
 
     @Test
     public void testGetByName() {
-        when(tenantMapper.getByName("TestTenant")).thenReturn(List.of(tenant));
+        when(tenantMapper.getByName("TestTenant")).thenReturn(Arrays.asList(tenant));
         List<Tenant> tenants = tenantService.getByName("TestTenant");
         assertFalse(tenants.isEmpty());
         verify(tenantMapper, times(1)).getByName("TestTenant");
@@ -165,7 +166,7 @@ public class TenantServiceTest {
 
     @Test
     public void testGetAllTenants() {
-        when(tenantMapper.findAll()).thenReturn(List.of(tenant));
+        when(tenantMapper.findAll()).thenReturn(Arrays.asList(tenant));
         List<Tenant> tenants = tenantService.getAll();
         assertFalse(tenants.isEmpty());
         verify(tenantMapper, times(1)).findAll();

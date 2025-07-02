@@ -48,4 +48,24 @@ public class ConferenceService {
     public List<Conference> searchConferences(String conferencename, String creator, String starttime) {
         return conferenceMapper.searchConferences(conferencename, creator, starttime);
     }
+
+    // 新增：获取待审核的会议
+    public List<Conference> getPendingConferences() {
+        return conferenceMapper.selectPendingConferences();
+    }
+
+    // 新增：根据审核状态获取会议
+    public List<Conference> getConferencesByApprovalStatus(String approvalStatus) {
+        return conferenceMapper.selectConferencesByApprovalStatus(approvalStatus);
+    }
+
+    // 新增：审核会议
+    public int approveConference(Integer conferenceID, String approvalStatus, String rejectionReason) {
+        return conferenceMapper.approveConference(conferenceID, approvalStatus, rejectionReason);
+    }
+
+    // 新增：获取已审核通过的会议（用于前端展示）
+    public List<Conference> getApprovedConferences() {
+        return conferenceMapper.selectApprovedConferences();
+    }
 }

@@ -6,6 +6,7 @@ import edu.neu.oaas.service.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class DepartmentController {
     }
 
 
-    @RequestMapping("/getall")
+    @GetMapping("/getall")
     public Map getAllByPrefix(@RequestParam String path){
         Map map = new HashMap<>();
         System.out.println("1 " +path);
@@ -45,8 +46,8 @@ public class DepartmentController {
     }
 
     //这里修改,根据管理员所属部门id来返回
-    @RequestMapping("/get")
-    public Map getAllByPrefix(@RequestParam Integer id){
+    @GetMapping("/get")
+    public Map getAllByDepartmentId(@RequestParam Integer id){
         String pathPrefix = departmentService.getDepartmentsById(id).getPath();
         Map map = new HashMap<>();
         List<Department> departments = departmentService.getAllByPrefix(pathPrefix);
@@ -57,7 +58,7 @@ public class DepartmentController {
 
 
 
-    @RequestMapping("/gets/{tmp}")
+    @GetMapping("/gets/{tmp}")
     public Map getAllByPre(@PathVariable String tmp){
         Map map = new HashMap<>();
         List<Department> departments = departmentService.getAllByPrefix(tmp);
@@ -67,7 +68,7 @@ public class DepartmentController {
         return map;
     }
 
-    @RequestMapping("/search")
+    @GetMapping("/search")
     public Map getAllByPrefixAndName(@RequestParam String departmentName,@RequestParam String status,@RequestParam Integer departementId){
         System.out.println(departementId);
         System.out.println(departmentName);
@@ -106,7 +107,7 @@ public class DepartmentController {
 //    }
 
 
-    @RequestMapping("/get/{id}")
+    @GetMapping("/get/{id}")
     public Map getDepartmentsById(@PathVariable Integer id) {
         Map map = new HashMap<>();
         Department department = departmentService.getDepartmentsById(id);
@@ -121,7 +122,7 @@ public class DepartmentController {
 
     }
 
-    @RequestMapping("/insert")
+    @PostMapping("/insert")
     public Map insertDepartment(@RequestBody Department department){
         Map map = new HashMap<>();
         if (departmentService.insertDepartment(department)){
@@ -139,7 +140,7 @@ public class DepartmentController {
     }
 
 
-    @RequestMapping("/update")
+    @PutMapping("/update")
     public Map updateDepartment(@RequestBody Department department){
         Map map = new HashMap<>();
         if(departmentService.updateDepartment(department)){
@@ -151,7 +152,7 @@ public class DepartmentController {
         return map;
     }
 
-    @RequestMapping("/delete")
+    @DeleteMapping("/delete")
     public Map delete(@RequestParam Integer id){
         Map map = new HashMap<>();
         if(departmentService.delete(id)){
@@ -189,7 +190,45 @@ public class DepartmentController {
         departmentService.deleteDepartment(id);
     }
 
+    // 根据租户ID获取部门列表
+    @GetMapping("/getByTenantId")
+    public Map getDepartmentsByTenant(@RequestParam Integer tenantId) {
+        Map map = new HashMap<>();
+        try {
+            List<Department> departments = departmentService.getDepartmentsByTenantId(tenantId);
+            map.put("departmentList", departments);
+            map.put("isOK", true);
+        } catch (Exception e) {
+            map.put("departmentList", new ArrayList<>());
+            map.put("isOK", false);
+            map.put("msg", "获取部门失败: " + e.getMessage());
+        }
+        return map;
+    }
 
+    // 根据部门ID获取部门信息
+    @GetMapping("/getByDepartmentId")
+    public Map getDepartmentByDepartmentId(@RequestParam Integer departmentId) {
+        Map map = new HashMap<>();
+        try {
+            Department department = departmentService.getDepartmentById(departmentId);
+            if (department != null) {
+                List<Department> departments = new ArrayList<>();
+                departments.add(department);
+                map.put("departmentList", departments);
+                map.put("isOK", true);
+            } else {
+                map.put("departmentList", new ArrayList<>());
+                map.put("isOK", false);
+                map.put("msg", "部门不存在");
+            }
+        } catch (Exception e) {
+            map.put("departmentList", new ArrayList<>());
+            map.put("isOK", false);
+            map.put("msg", "获取部门失败: " + e.getMessage());
+        }
+        return map;
+    }
 
     ////////////
 

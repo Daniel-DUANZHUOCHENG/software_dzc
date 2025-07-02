@@ -8,20 +8,51 @@ import java.util.List;
 @Mapper
 public interface InformationMapper {
 
-    @Select("SELECT id, title, picture, content, introduction, author, company, tenantId FROM Information")
-    List<Information> getAllInformation();
+    @Select("SELECT * FROM information WHERE path LIKE CONCAT(#{pathPrefix}, '%')")
+    List<Information> findByPathPrefix(@Param("pathPrefix") String pathPrefix);
 
-    @Insert("INSERT INTO Information (title, picture, content, introduction, author, company, tenantId) VALUES (#{title}, #{picture}, #{content}, #{introduction}, #{author}, #{company}, #{tenantId})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-    void addInformation(Information information);
+    @Select("<script>" +
+            "SELECT * FROM information WHERE path LIKE CONCAT(#{pathPrefix}, '%')" +
+            "<if test='title != null and title != \"\"'> AND title LIKE CONCAT('%', #{title}, '%')</if>" +
+            "<if test='author != null and author != \"\"'> AND author LIKE CONCAT('%', #{author}, '%')</if>" +
+            "</script>")
+    List<Information> searchByTitleAndAuthor(@Param("pathPrefix") String pathPrefix, @Param("title") String title, @Param("author") String author);
 
-    @Update("UPDATE Information SET title=#{title}, picture=#{picture}, content=#{content}, introduction=#{introduction}, author=#{author}, company=#{company}, tenantId=#{tenantId} WHERE id=#{id}")
-    void updateInformation(Information information);
+    @Insert("INSERT INTO information (title, picture, content, introduction, author, company, tenantId, path, approvalStatus) " +
+            "VALUES (#{title}, #{picture}, #{content}, #{introduction}, #{author}, #{company}, #{tenantId}, #{path}, #{approvalStatus})")
+    void insertInformation(Information information);
 
-    @Delete("DELETE FROM Information WHERE id=#{id}")
-    void deleteInformation(int id);
+    @Update("UPDATE information SET title=#{title}, picture=#{picture}, content=#{content}, introduction=#{introduction}, " +
+            "author=#{author}, company=#{company}, tenantId=#{tenantId}, path=#{path}, approvalStatus=#{approvalStatus}, rejectionReason=#{rejectionReason} WHERE id=#{id}")
+    int updateInformation(Information information);
 
-    @Select("SELECT id, title, picture, content, introduction, author, company, tenantId FROM Information WHERE id = #{id}")
+    @Delete("DELETE FROM information WHERE id=#{id}")
+    void deleteInformation(@Param("id") int id);
+
+    @Select("SELECT * FROM information WHERE id = #{id}")
     Information getInformationById(@Param("id") int id);
+
+    @Select("SELECT * FROM information WHERE tenantId = #{tenantId}")
+    List<Information> getInformationByTenantId(@Param("tenantId") int tenantId);
+
+    @Delete("DELETE FROM information WHERE path LIKE CONCAT(#{pathPrefix}, '%')")
+    void deleteByPathPrefix(@Param("pathPrefix") String pathPrefix);
+
+    // 审核相关方法
+    @Select("SELECT * FROM information WHERE approvalStatus = 'pending'")
+    List<Information> selectPendingInformation();
+
+    @Select("SELECT * FROM information WHERE approvalStatus = #{approvalStatus}")
+    List<Information> selectInformationByApprovalStatus(@Param("approvalStatus") String approvalStatus);
+
+    @Update("UPDATE information SET approvalStatus = #{approvalStatus}, rejectionReason = #{rejectionReason} WHERE id = #{id}")
+    int approveInformation(@Param("id") int id, @Param("approvalStatus") String approvalStatus, @Param("rejectionReason") String rejectionReason);
+
+    @Select("SELECT * FROM information WHERE approvalStatus = 'approved'")
+    List<Information> selectApprovedInformation();
+
+    // 新增：获取所有资讯的方法
+    @Select("SELECT * FROM information")
+    List<Information> getAllInformation();
 }
 

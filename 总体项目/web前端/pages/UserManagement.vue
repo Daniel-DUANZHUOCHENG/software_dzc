@@ -6,7 +6,7 @@
         <h1>用户管理</h1>
         <p>管理系统用户信息，包括用户创建、编辑、删除等操作</p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" v-if="currentUserRole !== 'User'">
         <el-button type="primary" @click="handleAddUser" class="action-btn">
           <el-icon><Plus /></el-icon>
           添加用户
@@ -138,7 +138,7 @@
             </div>
             
             <el-table 
-              :data="users" 
+              :data="paginatedUsers" 
               style="width: 100%" 
               class="user-table"
               :loading="tableLoading"
@@ -192,6 +192,7 @@
                       size="small" 
                       @click="handleEditUser(row)"
                       :icon="Edit"
+                      v-if="currentUserRole !== 'User' || (currentUserRole === 'User' && row.id === currentUserId)"
                     >
                       编辑
                     </el-button>
@@ -200,6 +201,7 @@
                       size="small" 
                       @click="confirmDeleteUser(row)"
                       :icon="Delete"
+                      v-if="currentUserRole !== 'User' && row.id !== currentUserId"
                     >
                       删除
                     </el-button>
@@ -500,7 +502,7 @@ import {
   Edit, Delete, Folder, Warning 
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+import axios from '../utils/request.js'
 
 // 响应式数据
 const departmentSearch = ref('')
@@ -512,7 +514,7 @@ const searchCriteria = ref({
   departmentId: null
 })
 
-const users = ref([])
+const users = ref<any[]>([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -524,6 +526,7 @@ const updateLoading = ref(false)
 // 表单引用
 const userFormRef = ref()
 const editUserFormRef = ref()
+const fileInput = ref()
 
 const dialogVisible = ref(false)
 const editDialogVisible = ref(false)
@@ -580,6 +583,24 @@ const userRules = {
   ]
 }
 
+// 计算属性 - 获取当前用户信息
+const currentUserRole = computed(() => {
+  const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  return user.role || 'User'
+})
+
+const currentUserId = computed(() => {
+  const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  return user.id
+})
+
+// 计算属性 - 实现前端分页
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return users.value.slice(start, end)
+})
+
 // 生命周期
 onMounted(() => {
   fetchUsers()
@@ -588,37 +609,70 @@ onMounted(() => {
 
 // 方法
 const fetchUsers = async () => {
+  if (tableLoading.value) return
+  
   tableLoading.value = true
   try {
+    const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    console.log('🔍 获取用户列表，当前用户角色:', currentUser.role)
+    
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value
     }
+
+    let response
     
-    // 如果有搜索条件，使用搜索接口
-    if (searchCriteria.value.username || searchCriteria.value.phoneNumber || 
-        searchCriteria.value.status || searchCriteria.value.createdAt || 
-        searchCriteria.value.departmentId) {
-      const searchParams = {
-        username: searchCriteria.value.username || undefined,
-        phoneNumber: searchCriteria.value.phoneNumber || undefined,
-        status: searchCriteria.value.status || undefined,
-        startDate: searchCriteria.value.createdAt?.[0] || undefined,
-        endDate: searchCriteria.value.createdAt?.[1] || undefined
+    // 根据用户角色获取不同的用户数据
+    if (currentUser.role === 'Admin') {
+      // 系统管理员：获取所有用户
+      if (searchCriteria.value.username || searchCriteria.value.phoneNumber || 
+          searchCriteria.value.status || searchCriteria.value.createdAt || 
+          searchCriteria.value.departmentId) {
+        const searchParams = {
+          username: searchCriteria.value.username || undefined,
+          phoneNumber: searchCriteria.value.phoneNumber || undefined,
+          status: searchCriteria.value.status || undefined,
+          startDate: searchCriteria.value.createdAt?.[0] || undefined,
+          endDate: searchCriteria.value.createdAt?.[1] || undefined
+        }
+        response = await axios.get('http://localhost:9049/users/search', { params: searchParams })
+        users.value = response.data.userList || []
+        total.value = response.data.userList?.length || 0
+      } else {
+        response = await axios.get('http://localhost:9049/users/all')
+        users.value = response.data.userList || []
+        total.value = response.data.userList?.length || 0
       }
-      
-      const response = await axios.get('http://localhost:9049/users/search', { params: searchParams })
+      console.log('👑 系统管理员：获取所有用户', users.value.length, '个')
+    } else if (currentUser.role === 'TAdmin') {
+      // 租户管理员：只获取本租户的用户
+      response = await axios.get(`http://localhost:9049/users/tenant/${currentUser.tenantId}`)
       users.value = response.data.userList || []
       total.value = response.data.userList?.length || 0
+      console.log('🏢 租户管理员：获取租户', currentUser.tenantId, '的用户', users.value.length, '个')
     } else {
-      // 使用分页接口
-      const response = await axios.get('http://localhost:9049/users/page', { params })
-      users.value = response.data.users || []
-      total.value = response.data.total || 0
+      // 普通用户：只能查看和编辑自己的信息
+      users.value = [currentUser]
+      total.value = 1
+      console.log('👤 普通用户：只显示自己的信息')
     }
+    
+    // 确保用户列表中每个用户都有头像
+    users.value = users.value.map(user => {
+      if (!user.avatar || user.avatar === '/avatar/default.jpg' || user.avatar === 'null') {
+        user.avatar = '/images/profile.jpg'
+      } else if (!user.avatar.startsWith('http')) {
+        user.avatar = `http://localhost:9049${user.avatar}`
+      }
+      return user
+    })
+    
   } catch (error) {
-    console.error('获取用户列表失败:', error)
+    console.error('❌ 获取用户列表失败:', error)
     ElMessage.error('获取用户列表失败')
+    users.value = []
+    total.value = 0
   } finally {
     tableLoading.value = false
   }
@@ -626,49 +680,359 @@ const fetchUsers = async () => {
 
 const fetchDepartments = async () => {
   try {
-    // 使用现有的部门接口，获取所有部门
-    const response = await axios.get('http://localhost:9049/departments/getall', {
-      params: { path: '' } // 获取根路径下的所有部门
-    })
+    // 获取当前用户信息
+    const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    console.log('🔍 当前用户信息:', currentUser)
     
-    if (response.data.isOK) {
-      // 将平铺的部门列表转换为树形结构
-      const departments = response.data.departmentList || []
-      treeData.value = buildDepartmentTree(departments)
+    let departmentResponse
+    let tenantResponse
+    
+    // 根据用户角色获取不同的数据
+    if (currentUser.role === 'Admin') {
+      // 系统管理员：获取所有租户和部门
+      try {
+        const [deptRes, tenantRes] = await Promise.all([
+          axios.get('http://localhost:9049/departments/getall', { params: { path: '' } }),
+          axios.get('http://localhost:9049/api/tenants/all')
+        ])
+        departmentResponse = deptRes
+        tenantResponse = tenantRes
+        console.log('👑 系统管理员：获取所有租户和部门')
+      } catch (error) {
+        console.log('尝试单独获取部门数据...')
+        departmentResponse = await axios.get('http://localhost:9049/departments/getall', {
+          params: { path: '' }
+        })
+      }
+    } else if (currentUser.role === 'TAdmin') {
+      // 租户管理员：只获取本租户的部门和租户信息
+      try {
+        const [deptRes, tenantRes] = await Promise.all([
+          axios.get('http://localhost:9049/departments/getByTenantId', {
+            params: { tenantId: currentUser.tenantId }
+          }),
+          axios.get(`http://localhost:9049/tenants/${currentUser.tenantId}`)
+        ])
+        departmentResponse = deptRes
+        tenantResponse = tenantRes
+        console.log('🏢 租户管理员：获取租户', currentUser.tenantId, '的部门')
+      } catch (error) {
+        console.log('尝试单独获取部门数据...')
+        departmentResponse = await axios.get('http://localhost:9049/departments/getByTenantId', {
+          params: { tenantId: currentUser.tenantId }
+        })
+      }
+    } else {
+      // 普通用户：只获取自己部门的信息
+      if (currentUser.departmentId) {
+        departmentResponse = await axios.get('http://localhost:9049/departments/getByDepartmentId', {
+          params: { departmentId: currentUser.departmentId }
+        })
+        console.log('👤 普通用户：获取部门', currentUser.departmentId, '的信息')
+      } else {
+        treeData.value = []
+        filteredTreeData.value = []
+        console.log('⚠️ 用户没有部门信息，显示空组织架构')
+        return
+      }
+    }
+    
+    if (departmentResponse && departmentResponse.data.isOK) {
+      const departments = departmentResponse.data.departmentList || []
+      const tenants = tenantResponse?.data?.data || tenantResponse?.data?.tenants || []
+      
+      console.log('📋 获取到的部门列表:', departments)
+      console.log('🏢 获取到的租户列表:', tenants)
+      
+      treeData.value = buildTenantDepartmentTree(departments, tenants, currentUser)
       filteredTreeData.value = [...treeData.value]
+    } else {
+      console.log('⚠️ 获取部门数据失败')
+      treeData.value = []
+      filteredTreeData.value = []
     }
   } catch (error) {
-    console.error('获取部门树失败:', error)
-    ElMessage.error('获取部门树失败')
+    console.error('❌ 获取部门树失败:', error)
+    // 备用方案
+    try {
+      const response = await axios.get('http://localhost:9049/departments/getall', {
+        params: { path: '' }
+      })
+      
+      if (response.data.isOK) {
+        const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        let departments = response.data.departmentList || []
+        
+        // 在前端进行数据过滤
+        if (currentUser.role === 'TAdmin') {
+          departments = departments.filter(dept => dept.tenantId === currentUser.tenantId)
+        } else if (currentUser.role === 'User') {
+          departments = departments.filter(dept => dept.id === currentUser.departmentId)
+        }
+        
+        treeData.value = buildTenantDepartmentTree(departments, [], currentUser)
+        filteredTreeData.value = [...treeData.value]
+        console.log('🔧 使用备用方案获取部门数据成功')
+      }
+    } catch (fallbackError) {
+      console.error('❌ 备用方案也失败:', fallbackError)
+      ElMessage.error('获取部门树失败')
+      treeData.value = []
+      filteredTreeData.value = []
+    }
   }
 }
 
-// 构建部门树形结构
-const buildDepartmentTree = (departments: any[]) => {
-  const departmentMap = new Map()
-  const rootDepartments: any[] = []
+// 构建租户-部门三级树形结构
+const buildTenantDepartmentTree = (departments: any[], tenants: any[], currentUser: any) => {
+  // 租户图标映射 - 支持多种租户名称格式
+  const tenantIcons = {
+    '京都动画': '🎬',
+    'MAPPA公司': '🎭', 
+    'Madhouse公司': '🎪',
+    '阿里巴巴集团': '🛒',
+    '阿里巴巴': '🛒',
+    '腾讯科技': '💬',
+    '腾讯': '💬',
+    '字节跳动': '📱',
+    '百度': '🔍',
+    'Baidu': '🔍',
+    '华为技术': '📡',
+    '华为': '📡',
+    '小米科技': '📱',
+    '小米': '📱',
+    '网易': '🎮',
+    'NetEase': '🎮',
+    '东北大学软件学院': '🎓',
+    '东北大学': '🎓'
+  }
   
-  // 创建部门映射
+  // 按租户分组部门
+  const tenantMap = new Map()
+  const departmentMap = new Map()
+  
+  // 创建部门映射 - 标准化字段名
   departments.forEach(dept => {
-    departmentMap.set(dept.id, {
+    const standardizedDept = {
       ...dept,
+      // 标准化常用字段名
+      id: dept.id || dept.Id,
+      departmentName: dept.departmentName || dept.DepartmentName,
+      manager: dept.manager || dept.Manager,
+      tenantId: dept.tenantId || dept.TenantId,
+      parentDepartment: dept.parentDepartment || dept.ParentDepartment || dept.parent_id || 0,
       children: [] as any[],
-      userCount: 0 // 暂时设为0，后续可以添加用户统计
-    })
+      userCount: 0,
+      isLeaf: false,
+      type: 'department'
+    }
+    departmentMap.set(standardizedDept.id, standardizedDept)
+    console.log(`📁 创建部门映射: ${standardizedDept.departmentName}(ID:${standardizedDept.id})`)
   })
   
-  // 构建树形结构
+  // 构建部门层级结构 - 正确处理父子关系
+  console.log('🏗️ 开始构建部门层级结构，部门总数:', departments.length)
+  
   departments.forEach(dept => {
-    const node = departmentMap.get(dept.id)
-    if (dept.parentDepartment && departmentMap.has(dept.parentDepartment)) {
-      const parent = departmentMap.get(dept.parentDepartment)
+    const deptId = dept.id || dept.Id
+    const node = departmentMap.get(deptId)
+    if (!node) {
+      console.warn(`⚠️ 找不到部门节点: ${deptId}`)
+      return
+    }
+    
+    console.log(`📋 处理部门: ${node.departmentName}(ID:${node.id}) 父部门ID:${node.parentDepartment}`)
+    
+    if (node.parentDepartment && node.parentDepartment !== 0 && departmentMap.has(node.parentDepartment)) {
+      // 有父部门，添加到父部门的children中
+      const parent = departmentMap.get(node.parentDepartment)
       parent.children.push(node)
+      console.log(`  ↳ 添加到父部门: ${parent.departmentName}`)
     } else {
-      rootDepartments.push(node)
+      // 根部门（parentDepartment为0或不存在），按租户分组
+      if (!tenantMap.has(node.tenantId)) {
+        tenantMap.set(node.tenantId, [])
+      }
+      tenantMap.get(node.tenantId).push(node)
+      console.log(`  ↳ 作为租户${node.tenantId}的根部门`)
     }
   })
   
-  return rootDepartments
+  console.log('🎯 租户部门分组结果:', tenantMap)
+  
+  // 构建最终的租户-部门树
+  const result: any[] = []
+  
+  if (currentUser.role === 'Admin') {
+    // 系统管理员：显示所有租户
+    const allTenantIds = new Set([...tenantMap.keys()])
+    
+    // 添加租户信息中的租户ID
+    if (tenants && tenants.length > 0) {
+      tenants.forEach(tenant => {
+        allTenantIds.add(tenant.id || tenant.Id)
+      })
+    }
+    
+    allTenantIds.forEach(tenantId => {
+      const tenant = tenants.find(t => (t.id || t.Id) === tenantId)
+      const tenantDepartments = tenantMap.get(tenantId) || []
+      
+      // 增强租户名获取逻辑，支持多种字段名和预设映射
+      let tenantName = `租户${tenantId}`
+      if (tenant) {
+        tenantName = tenant.tenantName || tenant.name || tenant.Name || tenant.TenantName || `租户${tenantId}`
+      } else {
+        // 预设的租户ID到名称映射（备用方案）
+        const tenantIdMapping = {
+          1: '京都动画',
+          2: 'MAPPA公司', 
+          3: 'Madhouse公司',
+          4: '阿里巴巴集团',
+          5: '腾讯科技',
+          6: '字节跳动',
+          7: '百度',
+          8: '华为技术',
+          9: '小米科技',
+          10: '网易',
+          11: '东北大学软件学院'
+        }
+        tenantName = tenantIdMapping[tenantId] || `租户${tenantId}`
+      }
+      
+      console.log(`🏢 租户${tenantId}解析为: "${tenantName}"`)
+      const tenantIcon = tenantIcons[tenantName] || '🏢'
+      
+      result.push({
+        id: `tenant-${tenantId}`,
+        departmentName: `${tenantIcon} ${tenantName}`,
+        tenantId: tenantId,
+        type: 'tenant',
+        children: tenantDepartments,
+        userCount: tenantDepartments.reduce((sum, dept) => sum + (dept.userCount || 0), 0)
+      })
+    })
+  } else if (currentUser.role === 'TAdmin') {
+    // 租户管理员：只显示自己的租户
+    const tenantId = currentUser.tenantId
+    const tenant = tenants.find(t => (t.id || t.Id) === tenantId)
+    const tenantDepartments = tenantMap.get(tenantId) || []
+    
+    // 为租户管理员也使用增强的租户名获取逻辑
+    let tenantName = `我的企业`
+    if (tenant) {
+      tenantName = tenant.tenantName || tenant.name || tenant.Name || tenant.TenantName || `我的企业`
+    } else {
+      // 预设的租户ID到名称映射（备用方案）
+      const tenantIdMapping = {
+        1: '京都动画',
+        2: 'MAPPA公司', 
+        3: 'Madhouse公司',
+        4: '阿里巴巴集团',
+        5: '腾讯科技',
+        6: '字节跳动',
+        7: '百度',
+        8: '华为技术',
+        9: '小米科技',
+        10: '网易',
+        11: '东北大学软件学院'
+      }
+      tenantName = tenantIdMapping[tenantId] || `我的企业`
+    }
+    
+    console.log(`🏢 租户管理员租户${tenantId}解析为: "${tenantName}"`)
+    const tenantIcon = tenantIcons[tenantName] || '🏢'
+    
+    result.push({
+      id: `tenant-${tenantId}`,
+      departmentName: `${tenantIcon} ${tenantName}`,
+      tenantId: tenantId,
+      type: 'tenant',
+      children: tenantDepartments,
+      userCount: tenantDepartments.reduce((sum, dept) => sum + (dept.userCount || 0), 0)
+    })
+  } else {
+    // 普通用户：只显示自己部门在租户下的位置，构建树形结构显示自己的部门位置
+    const userDept = departmentMap.get(currentUser.departmentId)
+    if (userDept) {
+      // 构建用户部门的完整路径树形结构
+      const buildUserDepartmentPath = (dept) => {
+        const path = [dept]
+        let currentDept = dept
+        
+        // 向上查找父部门，构建完整路径
+        while (currentDept.parentDepartment && currentDept.parentDepartment !== 0) {
+          const parent = departmentMap.get(currentDept.parentDepartment)
+          if (parent) {
+            path.unshift(parent)
+            currentDept = parent
+          } else {
+            break
+          }
+        }
+        
+        return path
+      }
+      
+      const departmentPath = buildUserDepartmentPath(userDept)
+      
+      // 找到用户的租户信息
+      const userTenantId = currentUser.tenantId
+      const tenant = tenants.find(t => (t.id || t.Id) === userTenantId)
+      
+      // 获取租户名称
+      let tenantName = `我的企业`
+      if (tenant) {
+        tenantName = tenant.tenantName || tenant.name || tenant.Name || tenant.TenantName || `我的企业`
+      } else {
+        const tenantIdMapping = {
+          1: '京都动画',
+          2: 'MAPPA公司', 
+          3: 'Madhouse公司',
+          4: '阿里巴巴集团',
+          5: '腾讯科技',
+          6: '字节跳动',
+          7: '百度',
+          8: '华为技术',
+          9: '小米科技',
+          10: '网易',
+          11: '东北大学软件学院'
+        }
+        tenantName = tenantIdMapping[userTenantId] || `我的企业`
+      }
+      
+      const tenantIcon = tenantIcons[tenantName] || '🏢'
+      
+      // 构建嵌套的树形结构
+      const buildNestedStructure = (path, index = 0) => {
+        if (index >= path.length) return []
+        
+        const currentDept = path[index]
+        const nextDepts = buildNestedStructure(path, index + 1)
+        
+        return [{
+          ...currentDept,
+          children: nextDepts,
+          userCount: index === path.length - 1 ? 1 : 0, // 只有用户所在的最终部门显示用户数
+          type: 'department'
+        }]
+      }
+      
+      const nestedDepartments = buildNestedStructure(departmentPath)
+      
+      // 创建租户节点包含用户的部门路径
+      result.push({
+        id: `tenant-${userTenantId}`,
+        departmentName: `${tenantIcon} ${tenantName}`,
+        tenantId: userTenantId,
+        type: 'tenant',
+        children: nestedDepartments,
+        userCount: 1
+      })
+    }
+  }
+  
+  return result
 }
 
 const filterTree = () => {
@@ -677,19 +1041,40 @@ const filterTree = () => {
     return
   }
   
-  const filterNode = (nodes: any[]) => {
+  const searchTerm = departmentSearch.value.toLowerCase().trim()
+  console.log('🔍 搜索部门关键词:', searchTerm)
+  
+  const filterNode = (nodes: any[]): any[] => {
     return nodes.filter(node => {
-      const match = node.departmentName.toLowerCase().includes(departmentSearch.value.toLowerCase())
-      if (node.children) {
-        node.children = filterNode(node.children)
-        return match || node.children.length > 0
+      // 检查当前节点是否匹配
+      const nameMatch = node.departmentName && node.departmentName.toLowerCase().includes(searchTerm)
+      const managerMatch = node.manager && node.manager.toLowerCase().includes(searchTerm)
+      const currentMatch = nameMatch || managerMatch
+      
+      // 递归过滤子节点
+      if (node.children && node.children.length > 0) {
+        const filteredChildren = filterNode(node.children)
+        node.children = filteredChildren
+        
+        // 如果当前节点匹配或有匹配的子节点，则保留
+        return currentMatch || filteredChildren.length > 0
       }
-      return match
-    })
+      
+      // 叶子节点，只依赖当前匹配
+      return currentMatch
+    }).map(node => ({
+      ...node,
+      // 确保保留过滤后的子节点
+      children: node.children || []
+    }))
   }
   
-  filteredTreeData.value = filterNode([...treeData.value])
+  const filtered = filterNode(JSON.parse(JSON.stringify(treeData.value)))
+  filteredTreeData.value = filtered
+  
+  console.log('📋 搜索结果:', filtered.length, '个部门')
 }
+
 const handleNodeClick = (data) => {
   searchCriteria.value = {
     ...searchCriteria.value,
@@ -892,16 +1277,91 @@ const formatDate = (date) => {
   return new Date(date).toLocaleString('zh-CN')
 }
 
-const exportUsers = () => {
-  ElMessage.info('导出功能开发中...')
+const exportUsers = async () => {
+  try {
+    const exportData = users.value.map((item, index) => {
+      return {
+        序号: index + 1,
+        用户ID: item.id,
+        用户名: item.username,
+        昵称: item.nickname,
+        邮箱: item.email,
+        手机号码: item.phoneNumber,
+        角色: item.role === 'Admin' ? '管理员' : '普通用户',
+        状态: item.status === 'Active' ? '正常' : '停用',
+        性别: item.gender || '',
+        职位: item.position || '',
+        部门ID: item.departmentId || '',
+        租户ID: item.tenantId || '',
+        创建时间: formatDate(item.createdAt),
+        备注: item.remark || ''
+      };
+    });
+    
+    const XLSX = await import('xlsx');
+    const { saveAs } = await import('file-saver');
+    
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '用户列表');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, `用户列表_${new Date().toLocaleDateString()}.xlsx`);
+    
+    ElMessage.success('用户列表导出成功');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败，请重试');
+  }
 }
 
 const importUsers = () => {
-  ElMessage.info('导入功能开发中...')
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
 }
 
-const handleFileChange = () => {
-  ElMessage.info('文件上传功能开发中...')
+const handleFileChange = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  
+  if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    ElMessage.error('请选择Excel文件')
+    return
+  }
+  
+  try {
+    const XLSX = await import('xlsx')
+    const reader = new FileReader()
+    
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[sheetName]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet)
+        
+        console.log('导入的用户数据:', jsonData)
+        ElMessage.success(`成功读取 ${jsonData.length} 条用户记录`)
+        
+        // 这里可以进一步处理导入的数据
+        // 比如批量创建用户等操作
+        
+      } catch (error) {
+        console.error('解析Excel文件失败:', error)
+        ElMessage.error('解析Excel文件失败')
+      }
+    }
+    
+    reader.readAsArrayBuffer(file)
+  } catch (error) {
+    console.error('读取文件失败:', error)
+    ElMessage.error('读取文件失败')
+  }
+  
+  // 清空input值，允许重复选择同一文件
+  ;(event.target as HTMLInputElement).value = ''
 }
 
 const handleDepartmentCheckChange = (data, checked) => {
@@ -913,9 +1373,24 @@ const handleDepartmentCheckChange = (data, checked) => {
 
 <style scoped>
 .user-management-container {
-  padding: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-management-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 /* 页面标题 */

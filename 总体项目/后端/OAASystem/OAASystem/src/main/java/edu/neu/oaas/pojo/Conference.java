@@ -11,8 +11,11 @@ public class Conference {
     private String endtime;
     private String state;
     private Integer tenantID;
+    private String approvalStatus;
+    private String rejectionReason;
 
     public Conference() {
+        this.approvalStatus = "pending";
     }
 
     public Conference(Integer conferenceID, String conferencename, String creator, String situation, String coverpath, String contentspath, String starttime, String endtime, String state, Integer tenantID) {
@@ -26,6 +29,7 @@ public class Conference {
         this.endtime = endtime;
         this.state = state;
         this.tenantID = tenantID;
+        this.approvalStatus = "pending";
     }
 
     public Integer getConferenceID() {
@@ -106,5 +110,21 @@ public class Conference {
 
     public void setTenantID(Integer tenantID) {
         this.tenantID = tenantID;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 }

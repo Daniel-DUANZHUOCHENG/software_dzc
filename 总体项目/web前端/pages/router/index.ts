@@ -12,6 +12,8 @@ import CourseManagement from '../CourseManagement.vue';
 import InformationManager from '../InformationManager.vue';
 import ConferenceManagement from '../ConferenceManagement.vue';
 import UserBehaviorManagement from '../UserBehaviorManagement.vue';
+import SystemSettings from '../SystemSettings.vue';
+import ApprovalManagement from '../ApprovalManagement.vue';
 import register from '../views/register.vue';
 
 const routes = [
@@ -136,6 +138,32 @@ const routes = [
         ]
       }
     },
+  { 
+    path: '/system-settings', 
+    name: 'systemSettings', 
+    component: SystemSettings,
+    meta: {
+      breadcrumb: [
+        { name: '首页', link: '/' },
+        { name: '系统管理', link: '/home' },
+        { name: '系统设置' }
+      ]
+    }
+  },
+  { 
+    path: '/approval-management', 
+    name: 'approvalManagement', 
+    component: ApprovalManagement,
+    meta: {
+      requireAuth: true,
+      requireAdmin: true,
+      breadcrumb: [
+        { name: '首页', link: '/' },
+        { name: '系统管理', link: '/home' },
+        { name: '审核管理' }
+      ]
+    }
+  },
 ];
 
 const router = createRouter({

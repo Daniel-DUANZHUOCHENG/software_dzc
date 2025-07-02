@@ -126,7 +126,45 @@
 		  </el-row>
 		  <el-row>
               <el-form-item label="备注" prop="remark">
+                <div class="media-tips">
+                  <el-alert
+                    title="媒体资源提示"
+                    type="info"
+                    :closable="false"
+                    show-icon
+                  >
+                    <template #default>
+                      <p>富文本编辑器支持插入图片、音频和视频：</p>
+                      <ul>
+                        <li>📷 图片：支持 JPG、PNG、GIF 格式，建议大小不超过10MB</li>
+                        <li>🎵 音频：支持 MP3、WAV、OGG、M4A 格式，大小限制50MB</li>
+                        <li>🎬 视频：支持 MP4、WebM、OGG 格式，大小限制100MB</li>
+                      </ul>
+                      <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                        💡 如果媒体文件无法播放，请检查文件格式是否正确，或尝试转换为推荐格式。
+                      </p>
+                    </template>
+                  </el-alert>
+                </div>
                 <div class="editor-wrapper">
+                  <div class="custom-toolbar">
+                    <button 
+                      type="button" 
+                      class="custom-media-btn audio-btn" 
+                      @click="handleAudioUpload"
+                      title="插入音频"
+                    >
+                      🎵 音频
+                    </button>
+                    <button 
+                      type="button" 
+                      class="custom-media-btn video-btn" 
+                      @click="handleVideoUpload"
+                      title="插入视频"
+                    >
+                      🎬 视频
+                    </button>
+                  </div>
                   <div id="editor" class="editor-container"></div>
                 </div>
               </el-form-item>
@@ -314,7 +352,7 @@
   </div>
 </template>
 <script>
-import axios from 'axios';
+import axios from '../utils/request.js';
 import { ref, onMounted, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
@@ -498,31 +536,57 @@ const closeDetailsDialog = () => {
 
 const handleUploadSuccess = (response, file, fileList) => {
   console.log('图片上传响应:', response);
+  console.log('响应数据类型:', typeof response);
+  console.log('响应完整内容:', JSON.stringify(response, null, 2));
   
   // 检查响应数据的结构
   if (response && typeof response === 'object') {
     // 尝试不同的可能字段名
-    const imageUrl = response.url || response.data?.url || response.path || response.data?.path || response.fileName;
+    const imageUrl = response.url || response.data?.url || response.path || response.data?.path || 
+                    response.fileName || response.data?.fileName || response.filePath || 
+                    response.data?.filePath || response.imageUrl || response.data?.imageUrl;
+    
+    console.log('提取的图片URL:', imageUrl);
     
     if (imageUrl) {
-      // 确保URL格式正确
+      // 存储相对路径，用于保存到数据库
       if (imageUrl.startsWith('http')) {
-        formData.value.icon = imageUrl;
+        // 如果是完整URL，提取相对路径部分
+        const url = new URL(imageUrl);
+        formData.value.icon = url.pathname;
       } else {
-        // 如果是相对路径，拼接完整URL
-        formData.value.icon = `http://localhost:9049${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+        // 如果是相对路径，确保以/开头
+        formData.value.icon = imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl;
       }
       
+      console.log('最终存储的图标路径:', formData.value.icon);
       ElMessage.success('图片上传成功');
-      console.log('设置图标URL:', formData.value.icon);
+      
+      // 更新文件列表显示
+      fileList.value = [{
+        name: file.name,
+        url: `http://localhost:9049${formData.value.icon}`
+      }];
     } else {
-      console.error('响应中未找到图片URL:', response);
+      console.error('响应中未找到图片URL，响应内容:', JSON.stringify(response, null, 2));
       ElMessage.error('图片上传失败：响应中未包含图片URL');
     }
   } else if (typeof response === 'string') {
     // 如果响应直接是字符串URL
-    formData.value.icon = response.startsWith('http') ? response : `http://localhost:9049/${response}`;
+    if (response.startsWith('http')) {
+      const url = new URL(response);
+      formData.value.icon = url.pathname;
+    } else {
+      formData.value.icon = response.startsWith('/') ? response : '/' + response;
+    }
+    
+    console.log('字符串响应，最终存储路径:', formData.value.icon);
     ElMessage.success('图片上传成功');
+    
+    fileList.value = [{
+      name: file.name,
+      url: `http://localhost:9049${formData.value.icon}`
+    }];
   } else {
     console.error('无效的响应数据格式:', response);
     ElMessage.error('图片上传失败：无效的响应数据格式');
@@ -1296,8 +1360,41 @@ return {
 </script>
 
 <style scoped>
+.container {
+  padding: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
 .el-row {
   margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.el-table,
+.el-card,
+.el-button,
+.el-input,
+.el-select,
+.el-pagination {
+  position: relative;
+  z-index: 1;
 }
 
 .action-buttons {

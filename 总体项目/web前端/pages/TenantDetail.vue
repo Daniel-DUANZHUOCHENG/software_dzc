@@ -190,7 +190,7 @@ import {
   ArrowLeft, Edit, User, Phone, Calendar, OfficeBuilding, Refresh, Delete 
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+import axios from '../utils/request.js'
 
 const route = useRoute()
 const router = useRouter()

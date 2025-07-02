@@ -32,7 +32,7 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE TenantId = #{tenantId}")
     List<User> getUsersByTenantId(@Param("tenantId") int tenantId);
 
-    @Select("SELECT * FROM users WHERE Username = #{username}")
+    @Select("SELECT * FROM users WHERE username = #{username}")
     User getUserByUsername(String username);
 
     @Select("SELECT * FROM users WHERE Email = #{email}")

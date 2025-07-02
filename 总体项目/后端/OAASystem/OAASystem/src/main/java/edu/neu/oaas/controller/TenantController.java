@@ -27,7 +27,7 @@ import java.util.Map;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/tenants")
+@RequestMapping("/api/tenants")
 public class TenantController {
     @Autowired
     private TenantService tenantService;
@@ -37,7 +37,7 @@ public class TenantController {
                     LocalDateTime.parse(json.getAsJsonPrimitive().getAsString(), DateTimeFormatter.ISO_DATE_TIME))
             .create();
 
-    @RequestMapping("/all")
+    @GetMapping("/all")
     public Map getAll(){
         Map map = new HashMap<>();
         List<Tenant> tenants = tenantService.getAll();
@@ -69,7 +69,7 @@ public class TenantController {
         return response;
     }
 
-    @RequestMapping("/{id}")
+    @GetMapping("/{id}")
     public Map getById(@PathVariable Integer id){
         Map map = new HashMap<>();
         Tenant tenant = tenantService.getById(id);
@@ -123,7 +123,7 @@ public class TenantController {
         return response;
     }
 
-    @RequestMapping("/insert")
+    @PostMapping("/insert")
     public Map<String, Object> insert(@RequestBody RegistrationRequest request){
         Map<String, Object> map = new HashMap<>();
         Tenant tenant = request.getTenant();
@@ -142,7 +142,7 @@ public class TenantController {
         }
         return map;
     }
-    @RequestMapping("/reset")
+    @PutMapping("/reset")
     public Map reset(@RequestBody Tenant tenant){
         Map map = new HashMap<>();
         if(tenantService.updateTenant(tenant)){
@@ -154,7 +154,7 @@ public class TenantController {
         return map;
     }
 
-    @RequestMapping("/delete")
+    @DeleteMapping("/delete")
     public Map delete(@RequestParam Integer id){
         Map map = new HashMap<>();
         if(tenantService.delete(id)){
