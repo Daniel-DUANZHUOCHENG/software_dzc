@@ -95,7 +95,7 @@ $uni-font-size-paragraph:15px;
   
   --border-color: #ecf0f1;
   --border-radius: 12px;
-  --border-radius-lg: 16px;
+  --border-radius-lg: 32px;
   --border-radius-sm: 8px;
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -510,13 +510,20 @@ body {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
 }
 
+.el-input__wrapper:focus-within {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
 .el-table {
   border-radius: var(--border-radius) !important;
   overflow: hidden !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
 }
 
 .el-table th {
-  background: var(--bg-secondary) !important;
+  background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
   font-weight: 600 !important;
 }
@@ -528,6 +535,16 @@ body {
 .el-pagination {
   margin-top: 20px;
   text-align: center;
+}
+
+.el-pagination.is-background .el-pager li {
+  background-color: var(--bg-secondary) !important;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+.el-pagination.is-background .el-pager li:not(.disabled).active {
+  background-color: var(--primary-color) !important;
+  color: white !important;
 }
 
 .el-dialog {
@@ -554,18 +571,67 @@ body {
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border-radius: 4px;
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--text-light);
-  border-radius: 4px;
+  background: #bdc3c7;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: #95a5a6;
+}
+
+/* 修复全局el-dialog样式 */
+.el-overlay-dialog {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.el-dialog {
+  border-radius: var(--border-radius-lg, 16px) !important;
+  box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.15)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+  margin: 0 !important;
+}
+
+.el-dialog__header {
+  padding: 24px 24px 16px !important;
+  border-bottom: 1px solid var(--border-color, #ecf0f1);
+  margin-right: 0 !important;
+}
+
+.el-dialog__title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary, #2c3e50);
+}
+
+.el-dialog__body {
+  padding: 24px !important;
+  overflow-y: auto !important;
+  flex-grow: 1;
+}
+
+.el-dialog__footer {
+  padding: 20px 24px !important;
+  border-top: 1px solid var(--border-color, #ecf0f1);
+}
+
+.el-tree-node__content:hover {
+  background: rgba(102, 126, 234, 0.1) !important;
+}
+
+.el-tree-node.is-current > .el-tree-node__content {
+  background: rgba(102, 126, 234, 0.2) !important;
+  color: var(--primary-color) !important;
 }

@@ -228,13 +228,14 @@
       </div>
     </div>
 
-    <!-- 添加用户对话框 -->
+    <!-- 添加/编辑用户对话框 -->
     <el-dialog 
       v-model="dialogVisible" 
-      title="添加用户" 
+      :title="isEditMode ? '编辑用户' : '添加用户'" 
       width="600px"
-      class="user-dialog"
       :close-on-click-modal="false"
+      append-to-body
+      draggable
     >
       <el-form 
         :model="userForm" 
@@ -248,10 +249,10 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="用户名" prop="username">
-                <el-input v-model="userForm.username" placeholder="请输入用户名" />
+                <el-input v-model="userForm.username" placeholder="请输入用户名" :disabled="isEditMode" />
               </el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="12" v-if="!isEditMode">
               <el-form-item label="密码" prop="password">
                 <el-input 
                   v-model="userForm.password" 
@@ -261,10 +262,15 @@
                 />
               </el-form-item>
             </el-col>
+            <el-col :span="12" v-else>
+               <el-form-item label="昵称" prop="nickname">
+                <el-input v-model="userForm.nickname" placeholder="请输入昵称" />
+              </el-form-item>
+            </el-col>
           </el-row>
           
           <el-row :gutter="20">
-            <el-col :span="12">
+            <el-col :span="12" v-if="!isEditMode">
               <el-form-item label="昵称" prop="nickname">
                 <el-input v-model="userForm.nickname" placeholder="请输入昵称" />
               </el-form-item>
@@ -362,114 +368,6 @@
       </template>
     </el-dialog>
 
-    <!-- 编辑用户对话框 -->
-    <el-dialog 
-      v-model="editDialogVisible" 
-      title="编辑用户" 
-      width="600px"
-      class="user-dialog"
-      :close-on-click-modal="false"
-    >
-      <el-form 
-        :model="editUserForm" 
-        :rules="userRules" 
-        ref="editUserFormRef"
-        label-width="100px"
-        class="user-form"
-      >
-        <div class="form-section">
-          <h4>基本信息</h4>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="用户名" prop="username">
-                <el-input v-model="editUserForm.username" disabled />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="昵称" prop="nickname">
-                <el-input v-model="editUserForm.nickname" placeholder="请输入昵称" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="性别">
-                <el-select v-model="editUserForm.gender" placeholder="请选择性别" style="width: 100%">
-                  <el-option label="男" value="Male" />
-                  <el-option label="女" value="Female" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="状态">
-                <el-radio-group v-model="editUserForm.status">
-                  <el-radio label="Active">正常</el-radio>
-                  <el-radio label="Inactive">停用</el-radio>
-                </el-radio-group>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
-        
-        <div class="form-section">
-          <h4>联系信息</h4>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="邮箱">
-                <el-input v-model="editUserForm.email" placeholder="请输入邮箱" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="手机号码">
-                <el-input v-model="editUserForm.phoneNumber" placeholder="请输入手机号码" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
-        
-        <div class="form-section">
-          <h4>权限设置</h4>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="角色">
-                <el-select v-model="editUserForm.role" placeholder="请选择角色" style="width: 100%">
-                  <el-option label="管理员" value="Admin" />
-                  <el-option label="普通用户" value="User" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="职位">
-                <el-input v-model="editUserForm.position" placeholder="请输入职位" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
-        
-        <div class="form-section">
-          <h4>其他信息</h4>
-          <el-form-item label="备注">
-            <el-input 
-              v-model="editUserForm.remark" 
-              type="textarea" 
-              :rows="3"
-              placeholder="请输入备注信息"
-            />
-          </el-form-item>
-        </div>
-      </el-form>
-      
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="editDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleUpdateUser" :loading="updateLoading">
-            保存
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-
     <!-- 错误提示对话框 -->
     <el-dialog 
       v-model="creationErrorDialogVisible" 
@@ -505,6 +403,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/request.js'
 
 // 响应式数据
+const isEditMode = ref(false) // 是否为编辑模式
 const departmentSearch = ref('')
 const searchCriteria = ref({
   username: '',
@@ -525,11 +424,9 @@ const updateLoading = ref(false)
 
 // 表单引用
 const userFormRef = ref()
-const editUserFormRef = ref()
 const fileInput = ref()
 
 const dialogVisible = ref(false)
-const editDialogVisible = ref(false)
 const creationErrorDialogVisible = ref(false)
 const creationErrorMessage = ref('')
 
@@ -552,21 +449,6 @@ const userForm = ref({
   position: '',
   remark: '',
   departmentId: 1 // 设置默认部门ID
-})
-
-const editUserForm = ref({
-  id: null,
-  username: '',
-  password: '',
-  nickname: '',
-  email: '',
-  phoneNumber: '',
-  role: 'User',
-  gender: '',
-  status: 'Active',
-  position: '',
-  remark: '',
-  departmentId: null
 })
 
 const userRules = {
@@ -1113,6 +995,7 @@ const handleCurrentChange = (page) => {
 }
 
 const handleAddUser = () => {
+  isEditMode.value = false
   userForm.value = {
     username: '',
     password: '',
@@ -1130,114 +1013,74 @@ const handleAddUser = () => {
 }
 
 const handleEditUser = (row) => {
-  editUserForm.value = { ...row }
-  editDialogVisible.value = true
+  isEditMode.value = true
+  userForm.value = { ...row }
+  dialogVisible.value = true
 }
 
 const handleSaveUser = async () => {
-  // 先进行表单校验
-  if (!userFormRef.value) {
-    ElMessage.error('表单引用未找到')
-    return
-  }
-  
+  if (!userFormRef.value) return;
   try {
-    await userFormRef.value.validate()
+    await userFormRef.value.validate();
   } catch (error) {
-    ElMessage.error('请完善必填信息')
-    return
+    ElMessage.error('请完善必填信息');
+    return;
   }
-  
-  saveLoading.value = true
-  try {
-    // 确保必填字段不为空
-    if (!userForm.value.username || !userForm.value.password || !userForm.value.nickname) {
-      ElMessage.error('用户名、密码、昵称不能为空')
-      saveLoading.value = false
-      return
-    }
-    
-    // 获取当前登录用户信息
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-    
-    // 准备要发送的数据
-    const userData = {
-      id: null, // 新用户ID为null
-      username: userForm.value.username,
-      password: userForm.value.password,
-      nickname: userForm.value.nickname,
-      phoneNumber: userForm.value.phoneNumber || '',
-      email: userForm.value.email || '',
-      gender: userForm.value.gender || '',
-      departmentId: userForm.value.departmentId || 1, // 确保有部门ID
-      status: userForm.value.status || 'Active',
-      role: userForm.value.role || 'User',
-      createdAt: new Date().toISOString(), // 设置创建时间
-      position: userForm.value.position || '',
-      remark: userForm.value.remark || '',
-      avatar: null,
-      tenantId: currentUser.tenantId || 1, // 设置租户ID
-      path: null // 路径字段，后端会处理
-    }
-    
-    console.log('发送用户数据:', userData)
-    
-    const response = await axios.post('http://localhost:9049/users/insert', userData)
-    console.log('后端响应:', response.data)
-    console.log('响应状态:', response.status)
-    
-    if (response.data.isOK) {
-      ElMessage.success('用户创建成功')
-      dialogVisible.value = false
-      fetchUsers()
-    } else {
-      creationErrorMessage.value = response.data.msg || '创建用户失败'
-      creationErrorDialogVisible.value = true
-    }
-  } catch (error) {
-    console.error('创建用户失败:', error)
-    console.error('错误详情:', error.response?.data)
-    creationErrorMessage.value = error.response?.data?.msg || '创建用户失败，请检查网络连接'
-    creationErrorDialogVisible.value = true
-  } finally {
-    saveLoading.value = false
-  }
-}
 
-const handleUpdateUser = async () => {
-  // 先进行表单校验
-  if (!editUserFormRef.value) {
-    ElMessage.error('表单引用未找到')
-    return
-  }
-  
-  try {
-    await editUserFormRef.value.validate()
-  } catch (error) {
-    ElMessage.error('请完善必填信息')
-    return
-  }
-  
-  updateLoading.value = true
-  try {
-    // 确保昵称不为空
-    if (!editUserForm.value.nickname) {
-      ElMessage.error('昵称不能为空')
-      return
+  if (isEditMode.value) {
+    // 更新逻辑
+    updateLoading.value = true;
+    try {
+      if (!userForm.value.nickname) {
+        ElMessage.error('昵称不能为空');
+        return;
+      }
+      await axios.post('http://localhost:9049/users/reset', userForm.value);
+      ElMessage.success('用户更新成功');
+      dialogVisible.value = false;
+      fetchUsers();
+    } catch (error) {
+      console.error('更新用户失败:', error);
+      creationErrorMessage.value = error.response?.data?.msg || '更新用户失败';
+      creationErrorDialogVisible.value = true;
+    } finally {
+      updateLoading.value = false;
     }
-    
-    await axios.post('http://localhost:9049/users/reset', editUserForm.value)
-    ElMessage.success('用户更新成功')
-    editDialogVisible.value = false
-    fetchUsers()
-  } catch (error) {
-    console.error('更新用户失败:', error)
-    creationErrorMessage.value = error.response?.data?.msg || '更新用户失败'
-    creationErrorDialogVisible.value = true
-  } finally {
-    updateLoading.value = false
+  } else {
+    // 创建逻辑
+    saveLoading.value = true;
+    try {
+      if (!userForm.value.username || !userForm.value.password || !userForm.value.nickname) {
+        ElMessage.error('用户名、密码、昵称不能为空');
+        saveLoading.value = false;
+        return;
+      }
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userData = {
+        ...userForm.value,
+        id: null,
+        createdAt: new Date().toISOString(),
+        tenantId: currentUser.tenantId || 1,
+        path: null
+      };
+      const response = await axios.post('http://localhost:9049/users/insert', userData);
+      if (response.data.isOK) {
+        ElMessage.success('用户创建成功');
+        dialogVisible.value = false;
+        fetchUsers();
+      } else {
+        creationErrorMessage.value = response.data.msg || '创建用户失败';
+        creationErrorDialogVisible.value = true;
+      }
+    } catch (error) {
+      console.error('创建用户失败:', error);
+      creationErrorMessage.value = error.response?.data?.msg || '创建用户失败，请检查网络连接';
+      creationErrorDialogVisible.value = true;
+    } finally {
+      saveLoading.value = false;
+    }
   }
-}
+};
 
 const confirmDeleteUser = async (row) => {
   try {
@@ -1585,7 +1428,8 @@ const handleDepartmentCheckChange = (data, checked) => {
   justify-content: center;
 }
 
-/* 对话框样式 */
+/* 对话框样式 (已被全局样式取代) */
+/*
 .user-dialog {
   border-radius: 16px;
 }
@@ -1594,6 +1438,7 @@ const handleDepartmentCheckChange = (data, checked) => {
   max-height: 60vh;
   overflow-y: auto;
 }
+*/
 
 .form-section {
   margin-bottom: 24px;
@@ -1624,6 +1469,7 @@ const handleDepartmentCheckChange = (data, checked) => {
   padding: 8px;
 }
 
+/*
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
@@ -1632,6 +1478,7 @@ const handleDepartmentCheckChange = (data, checked) => {
   padding-top: 20px;
   border-top: 1px solid #ecf0f1;
 }
+*/
 
 /* 错误对话框 */
 .error-dialog {
