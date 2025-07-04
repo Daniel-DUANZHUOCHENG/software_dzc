@@ -43,30 +43,32 @@ public class AuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         return;
 
-        /* 临时注释掉权限验证逻辑
-        // 从请求头或参数中获取用户信息
-        String userRole = getUserRole(request);
-        String userTenantId = getUserTenantId(request);
-        String userId = getUserId(request);
-
-        // 权限验证逻辑
-        if (!hasPermission(requestURI, method, userRole, userTenantId, userId, request)) {
-            // 权限不足，返回403错误
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("application/json;charset=UTF-8");
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "权限不足，无法访问该资源");
-            errorResponse.put("code", 403);
-            
-            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-            return;
-        }
-
-        // 权限验证通过，继续处理请求
-        filterChain.doFilter(request, response);
-        */
+        /*
+         * 临时注释掉权限验证逻辑
+         * // 从请求头或参数中获取用户信息
+         * String userRole = getUserRole(request);
+         * String userTenantId = getUserTenantId(request);
+         * String userId = getUserId(request);
+         * 
+         * // 权限验证逻辑
+         * if (!hasPermission(requestURI, method, userRole, userTenantId, userId,
+         * request)) {
+         * // 权限不足，返回403错误
+         * response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+         * response.setContentType("application/json;charset=UTF-8");
+         * 
+         * Map<String, Object> errorResponse = new HashMap<>();
+         * errorResponse.put("success", false);
+         * errorResponse.put("message", "权限不足，无法访问该资源");
+         * errorResponse.put("code", 403);
+         * 
+         * response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+         * return;
+         * }
+         * 
+         * // 权限验证通过，继续处理请求
+         * filterChain.doFilter(request, response);
+         */
     }
 
     /**
@@ -75,57 +77,59 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     private boolean shouldSkipAuthorization(String requestURI) {
         // 登录相关接口不需要权限验证
         return requestURI.startsWith("/login") ||
-               requestURI.startsWith("/register") ||
-               requestURI.equals("/users/login") ||
-               requestURI.equals("/users/register") ||
-               requestURI.equals("/users/test") ||        // 测试接口
-               requestURI.equals("/users/growth-stats") || // 用户增长统计接口
-               requestURI.startsWith("/userBehavior") ||  // 用户行为相关接口
-               requestURI.startsWith("/public") ||
-               requestURI.contains("/static/") ||
-               requestURI.startsWith("/images/") ||       // 轮播图及其他图片资源
-               requestURI.startsWith("/avatar/") ||       // 头像资源
-               requestURI.startsWith("/CourseCover/") ||   // 课程封面资源
-               requestURI.startsWith("/Video/") ||        // 视频资源
-               requestURI.startsWith("/tenant-icons/") || // 租户图标资源
-               requestURI.startsWith("/icons/") ||        // 通用图标资源
-               requestURI.startsWith("/ConferenceCover/") || // 会议封面资源
-               requestURI.startsWith("/carousel/") ||     // 轮播图相关接口
-               requestURI.endsWith(".js") ||
-               requestURI.endsWith(".css") ||
-               requestURI.endsWith(".html") ||
-               requestURI.endsWith(".ico") ||
-               requestURI.endsWith(".jpg") ||
-               requestURI.endsWith(".jpeg") ||
-               requestURI.endsWith(".png") ||
-               requestURI.endsWith(".gif") ||
-               requestURI.endsWith(".webp") ||
-               requestURI.endsWith(".svg") ||
-               requestURI.endsWith(".mp4") ||
-               requestURI.endsWith(".avi") ||
-               requestURI.endsWith(".mov") ||
-               // 临时添加：跳过所有API权限验证（用于调试）
-               requestURI.startsWith("/api/courses") ||   // 课程相关接口
-               requestURI.startsWith("/users/all") ||     // 用户列表接口
-               requestURI.startsWith("/users/tenant/") || // 租户用户接口
-               requestURI.startsWith("/users/id/") ||     // 用户详情接口
-               requestURI.startsWith("/users/profile/") || // 用户资料接口
-               requestURI.startsWith("/users/search") ||  // 用户搜索接口
-               requestURI.startsWith("/departments") ||   // 部门相关接口
-               requestURI.startsWith("/api/tenants") ||   // 租户相关接口
-               requestURI.startsWith("/conferences") ||   // 会议相关接口
-               requestURI.startsWith("/api/information") || // 资讯相关接口
-               requestURI.startsWith("/api/meeting-applications") || // 会议申请相关接口
-               requestURI.startsWith("/api/test") ||
-               requestURI.startsWith("/users/upload-avatar"); // 头像上传接口
+                requestURI.startsWith("/register") ||
+                requestURI.equals("/users/login") ||
+                requestURI.equals("/users/register") ||
+                requestURI.equals("/users/test") || // 测试接口
+                requestURI.equals("/users/growth-stats") || // 用户增长统计接口
+                requestURI.startsWith("/userBehavior") || // 用户行为相关接口
+                requestURI.startsWith("/public") ||
+                requestURI.contains("/static/") ||
+                requestURI.startsWith("/images/") || // 轮播图及其他图片资源
+                requestURI.startsWith("/avatar/") || // 头像资源
+                requestURI.startsWith("/CourseCover/") || // 课程封面资源
+                requestURI.startsWith("/Video/") || // 视频资源
+                requestURI.startsWith("/tenant-icons/") || // 租户图标资源
+                requestURI.startsWith("/icons/") || // 通用图标资源
+                requestURI.startsWith("/ConferenceCover/") || // 会议封面资源
+                requestURI.startsWith("/carousel/") || // 轮播图相关接口
+                requestURI.endsWith(".js") ||
+                requestURI.endsWith(".css") ||
+                requestURI.endsWith(".html") ||
+                requestURI.endsWith(".ico") ||
+                requestURI.endsWith(".jpg") ||
+                requestURI.endsWith(".jpeg") ||
+                requestURI.endsWith(".png") ||
+                requestURI.endsWith(".gif") ||
+                requestURI.endsWith(".webp") ||
+                requestURI.endsWith(".svg") ||
+                requestURI.endsWith(".mp4") ||
+                requestURI.endsWith(".avi") ||
+                requestURI.endsWith(".mov") ||
+                // 临时添加：跳过所有API权限验证（用于调试）
+                requestURI.startsWith("/api/courses") || // 课程相关接口
+                requestURI.startsWith("/users/all") || // 用户列表接口
+                requestURI.startsWith("/users/tenant/") || // 租户用户接口
+                requestURI.startsWith("/users/id/") || // 用户详情接口
+                requestURI.startsWith("/users/profile/") || // 用户资料接口
+                requestURI.startsWith("/users/search") || // 用户搜索接口
+                requestURI.startsWith("/departments") || // 部门相关接口
+                requestURI.startsWith("/api/tenants") || // 租户相关接口
+                requestURI.equals("/api/tenants/upload-icon") || // 租户图标上传接口
+                requestURI.startsWith("/conferences") || // 会议相关接口
+                requestURI.startsWith("/api/information") || // 资讯相关接口
+                requestURI.startsWith("/api/meeting-applications") || // 会议申请相关接口
+                requestURI.startsWith("/api/test") ||
+                requestURI.startsWith("/api/ai") || // AI相关接口
+                requestURI.startsWith("/users/upload-avatar"); // 头像上传接口
     }
 
     /**
      * 权限验证核心逻辑
      */
-    private boolean hasPermission(String requestURI, String method, String userRole, 
-                                 String userTenantId, String userId, HttpServletRequest request) {
-        
+    private boolean hasPermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
+
         // 系统管理员拥有所有权限
         if ("Admin".equals(userRole)) {
             return true;
@@ -173,8 +177,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 资讯管理权限检查
      */
-    private boolean checkInformationPermission(String requestURI, String method, String userRole, 
-                                             String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkInformationPermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 普通用户可以查看资讯，但不能修改或删除
         if ("User".equals(userRole)) {
             return method.equals("GET"); // 只允许GET请求（查看）
@@ -200,8 +204,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 会议申请权限检查
      */
-    private boolean checkMeetingApplicationPermission(String requestURI, String method, String userRole, 
-                                                    String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkMeetingApplicationPermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 普通用户可以提交申请和查看自己的申请
         if ("User".equals(userRole)) {
             if (method.equals("POST") && requestURI.endsWith("/submit")) {
@@ -239,8 +243,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 会议管理权限检查
      */
-    private boolean checkConferencePermission(String requestURI, String method, String userRole, 
-                                            String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkConferencePermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 普通用户只能查看会议，不能修改
         if ("User".equals(userRole)) {
             return method.equals("GET");
@@ -257,8 +261,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 用户管理权限检查
      */
-    private boolean checkUserPermission(String requestURI, String method, String userRole, 
-                                      String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkUserPermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 普通用户权限
         if ("User".equals(userRole)) {
             // 允许查看用户列表（用于显示目的）
@@ -277,9 +281,9 @@ public class AuthorizationFilter extends OncePerRequestFilter {
                 return true;
             }
             // 允许访问统计相关接口（用于工作台显示）
-            if (method.equals("GET") && (requestURI.equals("/users/growth-stats") || 
-                                        requestURI.startsWith("/users/stats") ||
-                                        requestURI.startsWith("/users/search"))) {
+            if (method.equals("GET") && (requestURI.equals("/users/growth-stats") ||
+                    requestURI.startsWith("/users/stats") ||
+                    requestURI.startsWith("/users/search"))) {
                 return true;
             }
             return false;
@@ -296,8 +300,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 部门管理权限检查
      */
-    private boolean checkDepartmentPermission(String requestURI, String method, String userRole, 
-                                            String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkDepartmentPermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 普通用户只能查看部门信息，不能修改
         if ("User".equals(userRole)) {
             return method.equals("GET");
@@ -314,8 +318,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 课程管理权限检查
      */
-    private boolean checkCoursePermission(String requestURI, String method, String userRole, 
-                                        String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkCoursePermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 普通用户可以查看已审核通过的课程，不能修改
         if ("User".equals(userRole)) {
             return method.equals("GET");
@@ -355,8 +359,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
     /**
      * 租户管理权限检查
      */
-    private boolean checkTenantPermission(String requestURI, String method, String userRole, 
-                                        String userTenantId, String userId, HttpServletRequest request) {
+    private boolean checkTenantPermission(String requestURI, String method, String userRole,
+            String userTenantId, String userId, HttpServletRequest request) {
         // 系统管理员拥有所有权限
         if ("Admin".equals(userRole)) {
             return true;
@@ -382,7 +386,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
 
         // 普通用户只能查看租户列表，不能进行其他操作
         if ("User".equals(userRole)) {
-            return method.equals("GET") && (requestURI.equals("/api/tenants/all") || requestURI.equals("/api/tenants/list"));
+            return method.equals("GET")
+                    && (requestURI.equals("/api/tenants/all") || requestURI.equals("/api/tenants/list"));
         }
 
         // 其他操作只有系统管理员可以进行
@@ -418,4 +423,4 @@ public class AuthorizationFilter extends OncePerRequestFilter {
         }
         return null;
     }
-} 
+}

@@ -120,6 +120,25 @@
   <!-- 新增租户弹窗 -->
   <el-dialog v-model="addDialogVisible" title="新增租户" width="60%">
         <el-form :model="formData" :rules="rules" ref="tenantForm" label-width="100px" class="dialog-form">
+          <!-- AI智能填充区域 -->
+          <div class="form-section ai-section">
+            <h4><el-icon><MagicStick /></el-icon> 智能填充 (AI)</h4>
+            <el-form-item label="一句话描述">
+              <el-input 
+                v-model="aiPromptText"
+                type="textarea"
+                :rows="3"
+                placeholder="例如：创建一个租户名为阿里巴巴，联系人是马云，电话是13800138000，主要业务是电子商务和云计算"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleAiParse" :loading="aiParsing" plain>
+                <el-icon><Promotion /></el-icon> AI 解析并填充表单（包含备注）
+              </el-button>
+            </el-form-item>
+            <p class="ai-tip">提示：添加对公司业务的描述，AI将自动生成专业的公司介绍作为备注</p>
+          </div>
+          
           <el-row :gutter="20">
             <el-col :span="24">
               <el-form-item label="租户名称" prop="tenantName">
@@ -131,7 +150,7 @@
             <el-col :span="24">
               <el-form-item label="租户图标" prop="icon">
                 <el-upload
-                  action="http://localhost:9049/api/tenants/upload-icon"
+                  action="/api/tenants/upload-icon"
                   list-type="picture-card"
                   :on-success="handleUploadSuccess"
                   :on-error="handleUploadError"
@@ -186,8 +205,17 @@
                     </template>
                   </el-alert>
                 </div>
+                
                 <div class="editor-wrapper">
                   <div class="custom-toolbar">
+                    <button 
+                      type="button" 
+                      class="custom-media-btn image-btn" 
+                      @click="handleImageUpload"
+                      title="插入图片"
+                    >
+                      📷 图片
+                    </button>
                     <button 
                       type="button" 
                       class="custom-media-btn audio-btn" 
@@ -205,7 +233,9 @@
                       🎬 视频
                     </button>
                   </div>
-                  <div id="editor" class="editor-container"></div>
+                  <div class="editor-container-wrapper">
+                    <div id="editor" class="editor-container"></div>
+                  </div>
                 </div>
               </el-form-item>
           </el-row>
@@ -216,102 +246,108 @@
         </template>
       </el-dialog>
   <!-- 修改租户弹窗 -->
-  <el-dialog v-model="editDialogVisible" title="修改租户" width="60%">
+  <el-dialog v-model="editDialogVisible" title="修改租户" width="80%">
         <el-form :model="formData" :rules="rules" ref="editTenantForm" label-width="100px" class="dialog-form">
-          <el-row :gutter="20">
-            <el-col :span="24">
-              <el-form-item label="租户名称" prop="tenantName">
-                <el-input v-model="formData.tenantName"></el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="20">
-            <el-col :span="24">
-              <el-form-item label="租户图标" prop="icon">
-                <el-upload
-                  action="http://localhost:9049/api/tenants/upload-icon"
-                  list-type="picture-card"
-                  :on-success="handleUploadSuccess"
-                  :on-error="handleUploadError"
-                  :on-remove="handleRemove"
-                  :before-upload="beforeUpload"
-                  :file-list="fileList"
-                  accept="image/*"
-                  :limit="1">
-                  <i class="el-icon-plus"></i>
-                </el-upload>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="联系人" prop="contactPerson">
-                <el-input v-model="formData.contactPerson"></el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="联系电话" prop="phone">
-                <el-input v-model="formData.phone"></el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="创建时间" prop="createdAt">
-                <el-date-picker v-model="formData.createdAt" type="datetime" placeholder="选择创建时间"></el-date-picker>
-              </el-form-item>
-            </el-col>
-		  </el-row>
-		  <el-row>
-              <el-form-item label="备注" prop="remark">
-                <div class="media-tips">
-                  <el-alert
-                    title="媒体资源提示"
-                    type="info"
-                    :closable="false"
-                    show-icon
-                  >
-                                         <template #default>
-                       <p>富文本编辑器支持插入图片、音频和视频：</p>
-                       <ul>
-                         <li>📷 图片：支持 JPG、PNG、GIF 格式，建议大小不超过10MB</li>
-                         <li>🎵 音频：支持 MP3、WAV、OGG、M4A 格式，大小限制50MB</li>
-                         <li>🎬 视频：支持 MP4、WebM、OGG 格式，大小限制100MB</li>
-                       </ul>
-                       <p style="font-size: 12px; color: #666; margin-top: 8px;">
-                         💡 如果媒体文件无法播放，请检查文件格式是否正确，或尝试转换为推荐格式。
-                       </p>
-                     </template>
-                  </el-alert>
-                </div>
-                <div class="editor-wrapper">
-                  <div class="custom-toolbar">
-                    <button 
-                      type="button" 
-                      class="custom-media-btn audio-btn" 
-                      @click="handleAudioUpload"
-                      title="插入音频"
-                    >
-                      🎵 音频
-                    </button>
-                    <button 
-                      type="button" 
-                      class="custom-media-btn video-btn" 
-                      @click="handleVideoUpload"
-                      title="插入视频"
-                    >
-                      🎬 视频
-                    </button>
+          <!-- AI智能填充区域 -->
+          <div class="form-section ai-section">
+            <h4><el-icon><MagicStick /></el-icon> AI 辅助修改</h4>
+            <el-form-item label="修改指令" label-width="100px">
+              <el-input 
+                v-model="aiPromptText" 
+                type="textarea" 
+                :rows="3" 
+                placeholder="例如：将联系人改为张三，联系电话更新为15812345678" 
+              />
+            </el-form-item>
+            <el-form-item label-width="100px">
+              <el-button type="primary" @click="handleAiParse" :loading="aiParsing" plain>
+                <el-icon><Promotion /></el-icon> AI 解析并填充到右侧
+              </el-button>
+            </el-form-item>
+          </div>
+          
+          <div class="edit-container">
+            <!-- Left Panel -->
+            <div class="panel left-panel">
+              <h3>修改前</h3>
+              <el-form :model="originalFormData" label-width="80px" disabled>
+                <el-form-item label="租户名称"><el-input v-model="originalFormData.tenantName" /></el-form-item>
+                <el-form-item label="联系人"><el-input v-model="originalFormData.contactPerson" /></el-form-item>
+                <el-form-item label="联系电话"><el-input v-model="originalFormData.phone" /></el-form-item>
+                <el-form-item label="创建时间">
+                  <el-date-picker v-model="originalFormData.createdAt" type="datetime" placeholder="选择创建时间" disabled></el-date-picker>
+                </el-form-item>
+              </el-form>
+            </div>
+            <!-- Right Panel -->
+            <div class="panel right-panel">
+              <h3>修改后 (AI填充 & 可编辑)</h3>
+              <el-form :model="formData" :rules="rules" ref="editFormRef" label-width="80px">
+                <el-form-item label="租户名称" prop="tenantName"><el-input v-model="formData.tenantName" /></el-form-item>
+                <el-form-item label="联系人" prop="contactPerson"><el-input v-model="formData.contactPerson" /></el-form-item>
+                <el-form-item label="联系电话" prop="phone"><el-input v-model="formData.phone" /></el-form-item>
+                <el-form-item label="创建时间" prop="createdAt">
+                  <el-date-picker v-model="formData.createdAt" type="datetime" placeholder="选择创建时间"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="租户图标" prop="icon">
+                  <el-upload
+                    action="/api/tenants/upload-icon"
+                    list-type="picture-card"
+                    :on-success="handleUploadSuccess"
+                    :on-error="handleUploadError"
+                    :on-remove="handleRemove"
+                    :before-upload="beforeUpload"
+                    :file-list="fileList"
+                    accept="image/*"
+                    :limit="1">
+                    <i class="el-icon-plus"></i>
+                  </el-upload>
+                </el-form-item>
+                
+                <el-form-item label="备注" prop="remark">
+                  <div class="editor-wrapper">
+                    <div class="custom-toolbar">
+                      <button 
+                        type="button" 
+                        class="custom-media-btn image-btn" 
+                        @click="handleImageUpload"
+                        title="插入图片"
+                      >
+                        📷 图片
+                      </button>
+                      <button 
+                        type="button" 
+                        class="custom-media-btn audio-btn" 
+                        @click="handleAudioUpload"
+                        title="插入音频"
+                      >
+                        🎵 音频
+                      </button>
+                      <button 
+                        type="button" 
+                        class="custom-media-btn video-btn" 
+                        @click="handleVideoUpload"
+                        title="插入视频"
+                      >
+                        🎬 视频
+                      </button>
+                    </div>
+                    <div class="editor-container-wrapper">
+                      <div id="edit-editor" class="editor-container"></div>
+                    </div>
                   </div>
-                  <div id="edit-editor" class="editor-container"></div>
-                </div>
-              </el-form-item>
-          </el-row>
+                </el-form-item>
+              </el-form>
+            </div>
+          </div>
+          
+          <template #footer>
+            <div class="dialog-footer">
+              <el-button @click="editDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="submitEditForm">确定</el-button>
+            </div>
+          </template>
         </el-form>
-        <template #footer>
-          <el-button @click="closeEditDialog">取消</el-button>
-          <el-button type="primary" @click="submitEditForm">确定</el-button>
-        </template>
       </el-dialog>
   <!-- 租户详情弹窗 -->
   <el-dialog v-model="detailsDialogVisible" title="租户详情" width="60%">
@@ -393,9 +429,9 @@
 </template>
 <script>
 import axios from '../utils/request.js';
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Delete } from '@element-plus/icons-vue';
+import { Delete, MagicStick, Promotion } from '@element-plus/icons-vue';
 import Quill from 'quill';
 import 'quill/dist/quill.core.css';
 import 'quill/dist/quill.snow.css';
@@ -405,6 +441,9 @@ import { useRouter } from 'vue-router';
 
 export default {
 name: 'TenantManagement',
+components: {
+  Delete, MagicStick, Promotion
+},
 setup() {
 const searchForm = ref({
 tenantName: '',
@@ -573,34 +612,58 @@ const closeAddDialog = () => {
   addDialogVisible.value = false;
 };
 
-const openEditDialog = (row) => {
-  let targetRow = row;
-  if (!targetRow) {
-    if (selectedRow.value) {
-      targetRow = selectedRow.value;
-    } else {
-      ElMessage.error('请先选择要修改的租户');
+const editTenant = (row) => {
+  console.log('开始编辑租户：', row.tenantName);
+  console.log('租户备注内容：', row.remark);
+  
+  // 复制原始数据以供比较
+  originalFormData.value = JSON.parse(JSON.stringify(row));
+  
+  // 设置表单数据
+  formData.value = { ...row };
+  
+  // 初始化文件列表（如果有图标）
+  fileList.value = [];
+  if (row.icon && row.icon !== 'default.png') {
+    fileList.value.push({
+      name: row.icon.split('/').pop() || row.icon,
+      url: `http://localhost:9049${row.icon}`
+    });
+  }
+  
+  // 先打开对话框
+  editDialogVisible.value = true;
+  
+  // 使用nextTick确保DOM已更新
+  nextTick(() => {
+    console.log('准备初始化编辑器，备注内容:', formData.value.remark);
+    
+    // 确保编辑器容器存在
+    const editorContainer = document.querySelector('#edit-editor');
+    if (!editorContainer) {
+      console.error('找不到编辑器容器 #edit-editor');
       return;
     }
-  }
-  
-  // 权限检查
-  if (!canEditTenant(targetRow)) {
-    ElMessage.error('您没有权限修改此租户');
-    return;
-  }
-  
-  Object.assign(formData.value, targetRow);
-  fileList.value = [
-    {
-      name: '租户图标',
-      url: `http://localhost:9049/${formData.value.icon}`
-    }
-  ];
-  editDialogVisible.value = true;
-  nextTick(() => {
-    initializeEditor('#edit-editor', true, formData.value.remark);
+    
+    // 延迟初始化编辑器，确保DOM完全渲染
+    setTimeout(() => {
+      // 初始化编辑器并设置内容
+      const quill = initializeEditor('#edit-editor', true, formData.value.remark || '');
+      console.log('编辑器初始化完成，内容已设置');
+      
+      // 确保内容被正确设置
+      if (quill && formData.value.remark) {
+        quill.root.innerHTML = formData.value.remark;
+      }
+    }, 300);
   });
+  
+  // 清空AI提示文本
+  aiPromptText.value = '';
+};
+
+const openEditDialog = (row) => {
+  editTenant(row);
 };
 
 const closeEditDialog = () => {
@@ -742,8 +805,18 @@ const submitEditForm = () => {
     return;
   }
 
+  // 确保获取最新的富文本编辑器内容
+  const editorContainer = document.querySelector('#edit-editor');
+  if (editorContainer) {
+    const quill = Quill.find(editorContainer);
+    if (quill) {
+      formData.value.remark = quill.root.innerHTML;
+      console.log('提交前获取富文本内容:', formData.value.remark.substring(0, 50) + '...');
+    }
+  }
+
   // 使用正确的后端接口 - 修正为/api/tenants路径
-  axios.put(`http://localhost:9049/api/tenants/${formData.value.id}`, formData.value).then(() => {
+  axios.put(`/api/tenants/${formData.value.id}`, formData.value).then(() => {
     ElMessage.success('租户修改成功');
     closeEditDialog();
     fetchTenants();
@@ -812,12 +885,15 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
   const editorContainer = document.querySelector(selector);
   if (!editorContainer) {
     console.error('Editor container not found:', selector);
-    return;
+    return null;
   }
 
-  const toolbar = editorContainer.previousElementSibling;
-  if (toolbar && toolbar.classList.contains('ql-toolbar')) {
-    toolbar.remove();
+  console.log(`初始化编辑器 ${selector}，isEdit=${isEdit}，内容长度=${content?.length || 0}`);
+
+  // 清除现有编辑器
+  const existingToolbar = editorContainer.parentElement.querySelector('.ql-toolbar');
+  if (existingToolbar) {
+    existingToolbar.remove();
   }
 
   editorContainer.innerHTML = '';
@@ -841,17 +917,44 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
 
   console.log('🔧 开始初始化Quill编辑器，选择器:', selector);
 
+  // 设置编辑器配置，添加宽度约束
   const quill = new Quill(selector, {
     theme: 'snow',
     modules: {
       toolbar: toolbarOptions
-    }
+    },
+    bounds: editorContainer.parentElement, // 设置边界为父元素
+    formats: [
+      'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block',
+      'header', 'list', 'script', 'indent', 'direction', 'size',
+      'color', 'background', 'font', 'align', 'link', 'image'
+    ]
   });
 
+  // 设置内容
   if (content) {
+    console.log('设置编辑器内容:', content.substring(0, 50) + '...');
     quill.root.innerHTML = content;
+    // 确保formData中的remark也被更新
+    formData.value.remark = content;
   }
 
+  // 手动设置编辑器宽度约束
+  quill.root.style.maxWidth = '100%';
+  quill.root.style.overflowX = 'hidden';
+  quill.root.style.wordBreak = 'break-word';
+  quill.root.style.whiteSpace = 'pre-wrap';
+  
+  // 添加文本换行处理
+  quill.on('text-change', () => {
+    // 更新表单数据
+    formData.value.remark = quill.root.innerHTML;
+    console.log('编辑器内容已更新');
+    
+    // 强制处理长文本换行
+    enforceTextWrapping(quill.root);
+  });
+  
   // 处理图片插入
   const toolbar_quill = quill.getModule('toolbar');
   
@@ -869,7 +972,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
         formData.append('file', file);
         
         // 上传图片到服务器
-        axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
+        axios.post('/api/tenants/upload-icon', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -929,7 +1032,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
          formData.append('file', file);
          
          // 上传音频到服务器
-        axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
+        axios.post('/api/tenants/upload-icon', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -943,7 +1046,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
             const audioHtml = `
               <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
                 <p style="margin: 0 0 8px 0; font-weight: bold; color: #666;">🎵 音频文件: ${file.name}</p>
-                <audio controls style="width: 100%;" preload="metadata">
+                <audio controls style="width: 100%; margin-bottom: 10px;" preload="auto">
                   <source src="${audioUrl}" type="${file.type}">
                   <source src="${audioUrl}" type="audio/mpeg">
                   <source src="${audioUrl}" type="audio/wav">
@@ -991,7 +1094,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
          formData.append('file', file);
          
          // 上传视频到服务器
-        axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
+        axios.post('/api/tenants/upload-icon', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -1005,7 +1108,7 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
             const videoHtml = `
               <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
                 <p style="margin: 0 0 8px 0; font-weight: bold; color: #666;">🎬 视频文件: ${file.name}</p>
-                <video controls style="width: 100%; max-width: 600px; border-radius: 4px;" preload="metadata">
+                <video controls style="width: 100%; max-width: 600px; border-radius: 8px; margin-bottom: 10px;" preload="auto">
                   <source src="${videoUrl}" type="${file.type}">
                   <source src="${videoUrl}" type="video/mp4">
                   <source src="${videoUrl}" type="video/webm">
@@ -1105,18 +1208,47 @@ const initializeEditor = (selector, isEdit = false, content = '') => {
     }
   });
 
-  quill.on('text-change', () => {
-    formData.value.remark = quill.root.innerHTML;
-  });
-
   console.log('📝 Quill编辑器初始化完成');
   console.log('编辑器容器:', quill.container);
   console.log('编辑器主题:', quill.theme);
 
   // 保存当前编辑器实例供外部按钮使用
   currentQuillInstance = quill;
-
+  
   return quill;
+};
+
+// 强制处理长文本换行
+const enforceTextWrapping = (element) => {
+  if (!element) return;
+  
+  // 处理所有文本节点
+  const textNodes = Array.from(element.childNodes).filter(
+    node => node.nodeType === Node.TEXT_NODE || 
+           (node.nodeType === Node.ELEMENT_NODE && 
+            !['IMG', 'VIDEO', 'AUDIO'].includes(node.tagName))
+  );
+  
+  textNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      // 对于纯文本节点，确保其父元素有正确的样式
+      if (node.parentElement) {
+        node.parentElement.style.maxWidth = '100%';
+        node.parentElement.style.wordBreak = 'break-word';
+        node.parentElement.style.overflowWrap = 'break-word';
+        node.parentElement.style.whiteSpace = 'pre-wrap';
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // 对于元素节点，设置样式并递归处理其子节点
+      node.style.maxWidth = '100%';
+      node.style.wordBreak = 'break-word';
+      node.style.overflowWrap = 'break-word';
+      node.style.whiteSpace = 'pre-wrap';
+      
+      // 递归处理子节点
+      enforceTextWrapping(node);
+    }
+  });
 };
 
 const goToTenantDetail = (id) => {
@@ -1236,7 +1368,7 @@ const handleAudioUpload = () => {
       formData.append('file', file);
       
       // 上传音频到服务器
-      axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
+      axios.post('/api/tenants/upload-icon', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -1261,43 +1393,43 @@ const handleAudioUpload = () => {
           
           // 使用第一个URL作为默认值，但在HTML中提供所有选项
           const audioUrl = possibleUrls[1];
-          console.log('🔗 最终使用的音频URL:', audioUrl);
-          console.log('📝 记录音频地址，准备插入播放器');
           
-                     if (currentQuillInstance) {
-             const range = currentQuillInstance.getSelection() || { index: 0 };
-             
-             // 生成音频播放器HTML
-             const audioHtml = `
-               <div style="margin: 15px 0; padding: 15px; border: 2px solid #e3f2fd; border-radius: 12px; background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                   <span style="font-size: 24px; margin-right: 8px;">🎵</span>
-                   <div>
-                     <p style="margin: 0; font-weight: bold; color: #1976d2; font-size: 16px;">${file.name}</p>
-                     <p style="margin: 0; font-size: 12px; color: #666;">音频文件 • ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                   </div>
-                 </div>
-                                   <audio controls style="width: 100%; margin-bottom: 10px;" preload="auto">
-                    ${possibleUrls.map(url => `<source src="${url}" type="${file.type}">`).join('')}
-                    ${possibleUrls.map(url => `<source src="${url}" type="audio/mpeg">`).join('')}
-                    ${possibleUrls.map(url => `<source src="${url}" type="audio/wav">`).join('')}
-                    您的浏览器不支持音频播放。
+          // 查找活动的编辑器
+          let editorContainer = document.querySelector('#editor');
+          // 如果找不到，尝试查找编辑对话框中的编辑器
+          if (!editorContainer) {
+            editorContainer = document.querySelector('#edit-editor');
+          }
+          
+          if (editorContainer) {
+            const quill = Quill.find(editorContainer);
+            if (quill) {
+              const range = quill.getSelection() || { index: 0 };
+              const audioHtml = `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                  <p style="margin: 0 0 8px 0; font-weight: bold; color: #666;">🎵 音频文件: ${file.name}</p>
+                  <audio controls style="width: 100%; margin-bottom: 10px;" preload="auto">
+                    <source src="${audioUrl}" type="${file.type}">
+                    <source src="${audioUrl}" type="audio/mpeg">
+                    <source src="${audioUrl}" type="audio/wav">
+                    <source src="${audioUrl}" type="audio/ogg">
+                    <p style="color: #999; font-style: italic;">
+                      您的浏览器不支持音频播放。
+                      <a href="${audioUrl}" target="_blank" style="color: #007bff;">点击下载音频文件</a>
+                    </p>
                   </audio>
-                  <div style="margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
-                    <strong>调试信息:</strong><br>
-                    ${possibleUrls.map((url, index) => `<a href="${url}" target="_blank" style="display: block; color: #666; margin: 2px 0;">URL ${index + 1}: ${url}</a>`).join('')}
-                  </div>
-                 <div style="text-align: center;">
-                   <a href="${audioUrl}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">📁 打开文件链接</a>
-                 </div>
-               </div>
-             `;
-             
-             currentQuillInstance.clipboard.dangerouslyPasteHTML(range.index, audioHtml);
-             ElMessage.success('音频上传成功');
-           } else {
-             ElMessage.error('编辑器未就绪');
-           }
+                </div>
+              `;
+              quill.clipboard.dangerouslyPasteHTML(range.index, audioHtml);
+              ElMessage.success('音频上传成功');
+            } else {
+              console.error('找不到Quill实例');
+              ElMessage.error('无法将音频插入编辑器');
+            }
+          } else {
+            console.error('找不到编辑器容器');
+            ElMessage.error('找不到编辑器容器');
+          }
         } else {
           ElMessage.error('音频上传失败：无效的响应数据');
         }
@@ -1338,7 +1470,7 @@ const handleVideoUpload = () => {
       formData.append('file', file);
       
       // 上传视频到服务器
-      axios.post('http://localhost:9049/api/tenants/upload-icon', formData, {
+      axios.post('/api/tenants/upload-icon', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -1363,49 +1495,244 @@ const handleVideoUpload = () => {
           
           // 使用第一个URL作为默认值，但在HTML中提供所有选项
           const videoUrl = possibleUrls[1];
-          console.log('🔗 最终使用的视频URL:', videoUrl);
-          console.log('📝 记录视频地址，准备插入播放器');
           
-                     if (currentQuillInstance) {
-             const range = currentQuillInstance.getSelection() || { index: 0 };
-             
-             // 生成视频播放器HTML
-             const videoHtml = `
-               <div style="margin: 15px 0; padding: 15px; border: 2px solid #fff3e0; border-radius: 12px; background: linear-gradient(135deg, #fffbf0 0%, #fff3e0 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                   <span style="font-size: 24px; margin-right: 8px;">🎬</span>
-                   <div>
-                     <p style="margin: 0; font-weight: bold; color: #f57c00; font-size: 16px;">${file.name}</p>
-                     <p style="margin: 0; font-size: 12px; color: #666;">视频文件 • ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                   </div>
-                 </div>
-                                   <video controls style="width: 100%; max-width: 600px; border-radius: 8px; margin-bottom: 10px;" preload="auto">
-                    ${possibleUrls.map(url => `<source src="${url}" type="${file.type}">`).join('')}
-                    ${possibleUrls.map(url => `<source src="${url}" type="video/mp4">`).join('')}
-                    ${possibleUrls.map(url => `<source src="${url}" type="video/webm">`).join('')}
-                    您的浏览器不支持视频播放。
+          // 查找活动的编辑器
+          let editorContainer = document.querySelector('#editor');
+          // 如果找不到，尝试查找编辑对话框中的编辑器
+          if (!editorContainer) {
+            editorContainer = document.querySelector('#edit-editor');
+          }
+          
+          if (editorContainer) {
+            const quill = Quill.find(editorContainer);
+            if (quill) {
+              const range = quill.getSelection() || { index: 0 };
+              const videoHtml = `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                  <p style="margin: 0 0 8px 0; font-weight: bold; color: #666;">🎬 视频文件: ${file.name}</p>
+                  <video controls style="width: 100%; max-width: 600px; border-radius: 8px; margin-bottom: 10px;" preload="auto">
+                    <source src="${videoUrl}" type="${file.type}">
+                    <source src="${videoUrl}" type="video/mp4">
+                    <source src="${videoUrl}" type="video/webm">
+                    <source src="${videoUrl}" type="video/ogg">
+                    <p style="color: #999; font-style: italic;">
+                      您的浏览器不支持视频播放。
+                      <a href="${videoUrl}" target="_blank" style="color: #007bff;">点击下载视频文件</a>
+                    </p>
                   </video>
-                  <div style="margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
-                    <strong>调试信息:</strong><br>
-                    ${possibleUrls.map((url, index) => `<a href="${url}" target="_blank" style="display: block; color: #666; margin: 2px 0;">URL ${index + 1}: ${url}</a>`).join('')}
-                  </div>
-                 <div style="text-align: center;">
-                   <a href="${videoUrl}" target="_blank" style="color: #f57c00; text-decoration: none; font-size: 12px;">📁 打开文件链接</a>
-                 </div>
-               </div>
-             `;
-             
-             currentQuillInstance.clipboard.dangerouslyPasteHTML(range.index, videoHtml);
-             ElMessage.success('视频上传成功');
-           } else {
-             ElMessage.error('编辑器未就绪');
-           }
+                </div>
+              `;
+              quill.clipboard.dangerouslyPasteHTML(range.index, videoHtml);
+              ElMessage.success('视频上传成功');
+            } else {
+              console.error('找不到Quill实例');
+              ElMessage.error('无法将视频插入编辑器');
+            }
+          } else {
+            console.error('找不到编辑器容器');
+            ElMessage.error('找不到编辑器容器');
+          }
         } else {
           ElMessage.error('视频上传失败：无效的响应数据');
         }
       }).catch(error => {
         console.error('视频上传失败:', error);
         ElMessage.error('视频上传失败');
+      });
+    }
+  };
+};
+
+// AI功能相关变量
+const aiPromptText = ref('')
+const aiParsing = ref(false)
+const originalFormData = ref({})
+
+// 备注AI生成相关变量
+const remarkPromptText = ref('')
+const aiGeneratingRemark = ref(false)
+
+// AI解析函数
+const handleAiParse = async () => {
+  if (!aiPromptText.value.trim()) {
+    ElMessage.warning('请输入描述信息');
+    return;
+  }
+  aiParsing.value = true;
+  try {
+    // 调用后端API解析文本
+    const response = await axios.post('/api/ai/parse-form/tenant', { text: aiPromptText.value });
+    
+    if (response.data.error) {
+      ElMessage.error('AI解析失败: ' + response.data.error);
+      aiParsing.value = false;
+      return;
+    }
+    
+    // 更新表单数据
+    const data = response.data;
+    
+    // 保存原始数据用于比较
+    originalFormData.value = { ...formData.value };
+    
+    // 更新表单字段
+    if (data.tenantName) formData.value.tenantName = data.tenantName;
+    if (data.contactPerson) formData.value.contactPerson = data.contactPerson;
+    if (data.phone) formData.value.phone = data.phone;
+    
+    // 尝试生成备注内容
+    try {
+      const remarkResponse = await axios.post('/api/ai/generate/tenant-remark', {
+        tenantName: formData.value.tenantName || '未命名租户',
+        description: aiPromptText.value
+      });
+      
+      if (remarkResponse.data && remarkResponse.data.remark) {
+        // 更新编辑器内容
+        const editorContainer = document.querySelector('#editor');
+        if (editorContainer) {
+          // 获取Quill实例并设置内容
+          const quill = Quill.find(editorContainer);
+          if (quill) {
+            // 直接设置HTML内容
+            quill.root.innerHTML = remarkResponse.data.remark;
+            // 确保formData中的remark也被更新
+            formData.value.remark = remarkResponse.data.remark;
+            console.log('AI生成的备注内容已设置到编辑器中');
+          } else {
+            console.error('找不到Quill实例');
+            // 尝试重新初始化编辑器
+            setTimeout(() => {
+              initializeEditor('#editor', false, remarkResponse.data.remark);
+            }, 100);
+          }
+        } else {
+          console.error('找不到编辑器容器');
+        }
+      }
+    } catch (remarkError) {
+      console.error("AI生成备注错误:", remarkError);
+      ElMessage.warning('表单填充成功，但备注生成失败。');
+    }
+
+    ElMessage.success('AI填充成功！已自动生成备注内容，请核对信息。');
+  } catch (error) {
+    console.error("AI parse error:", error);
+    ElMessage.error('调用AI解析接口失败: ' + (error.response?.data?.message || error.message));
+  } finally {
+    aiParsing.value = false;
+  }
+};
+
+// AI生成备注
+const handleAiGenerateRemark = async () => {
+  if (!remarkPromptText.value.trim() && !formData.value.tenantName) {
+    ElMessage.warning('请输入公司描述信息或至少填写租户名称');
+    return;
+  }
+  aiGeneratingRemark.value = true;
+  try {
+    // 调用后端AI生成API
+    const response = await axios.post('/api/ai/generate/tenant-remark', { 
+      tenantName: formData.value.tenantName || '未命名租户', 
+      description: remarkPromptText.value 
+    });
+    const data = response.data;
+
+    if (data.error) {
+      ElMessage.error('AI生成失败: ' + data.error);
+      return;
+    }
+
+    if (data.remark) {
+      // 更新编辑器内容
+      const editorContainer = document.querySelector('#editor');
+      if (editorContainer) {
+        const quill = Quill.find(editorContainer);
+        if (quill) {
+          // 直接设置HTML内容
+          quill.root.innerHTML = data.remark;
+          // 确保formData中的remark也被更新
+          formData.value.remark = data.remark;
+          ElMessage.success('AI已生成专业备注内容！');
+        } else {
+          console.error('找不到Quill实例');
+          // 尝试重新初始化编辑器
+          setTimeout(() => {
+            initializeEditor('#editor', false, data.remark);
+          }, 100);
+        }
+      } else {
+        console.error('找不到编辑器容器');
+        ElMessage.error('更新编辑器内容失败');
+      }
+    } else {
+      ElMessage.warning('AI未返回有效内容');
+    }
+    
+  } catch (error) {
+    console.error("AI生成备注错误:", error);
+    ElMessage.error('调用AI生成接口失败: ' + (error.response?.data?.message || error.message));
+  } finally {
+    aiGeneratingRemark.value = false;
+  }
+};
+
+// 处理图片上传
+const handleImageUpload = () => {
+  const input = document.createElement('input');
+  input.setAttribute('type', 'file');
+  input.setAttribute('accept', 'image/*');
+  input.click();
+  
+  input.onchange = () => {
+    const file = input.files[0];
+    if (file) {
+      // 验证图片文件大小 (限制10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        ElMessage.error('图片文件大小不能超过10MB');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // 上传图片到服务器
+      axios.post('/api/tenants/upload-icon', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(response => {
+        if (response.data && response.data.url) {
+          const imageUrl = response.data.url.startsWith('http') 
+            ? response.data.url 
+            : `http://localhost:9049${response.data.url}`;
+          
+          // 获取编辑器实例并插入图片
+          let editorContainer = document.querySelector('#editor');
+          // 如果找不到，尝试查找编辑对话框中的编辑器
+          if (!editorContainer) {
+            editorContainer = document.querySelector('#edit-editor');
+          }
+          
+          if (editorContainer) {
+            const quill = Quill.find(editorContainer);
+            if (quill) {
+              const range = quill.getSelection() || { index: 0 };
+              quill.insertEmbed(range.index, 'image', imageUrl);
+              ElMessage.success('图片上传成功');
+            } else {
+              console.error('找不到Quill实例');
+            }
+          } else {
+            console.error('找不到编辑器容器');
+          }
+        } else {
+          ElMessage.error('图片上传失败：无效的响应数据');
+        }
+      }).catch(error => {
+        console.error('图片上传失败:', error);
+        ElMessage.error('图片上传失败: ' + (error.response?.data?.message || error.message));
       });
     }
   };
@@ -1461,7 +1788,15 @@ return {
   closeImagePreview,
   deleteTenantIcon,
   handleAudioUpload,
-  handleVideoUpload
+  handleVideoUpload,
+  aiPromptText,
+  aiParsing,
+  originalFormData,
+  remarkPromptText,
+  aiGeneratingRemark,
+  handleAiParse,
+  handleAiGenerateRemark,
+  handleImageUpload
 };
 }
 };
@@ -1658,5 +1993,203 @@ return {
 
 .video-btn {
   color: #e83e8c;
+}
+
+/* 分页器样式 */
+.el-pagination {
+  text-align: right;
+  margin-top: 20px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+/* 添加AI相关样式 */
+.form-section {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 20px;
+}
+
+.form-section h4 {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #409eff;
+}
+
+.form-section h4 .el-icon {
+  margin-right: 8px;
+}
+
+.ai-section {
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #d9ecff;
+}
+
+.edit-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.panel {
+  flex: 1;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.left-panel {
+  background-color: #f5f7fa;
+}
+
+.right-panel {
+  background-color: #fff;
+}
+
+.panel h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+/* AI备注生成区域样式 */
+.ai-remark-section {
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid #d9ecff;
+}
+
+.image-btn {
+  color: #409eff;
+}
+
+.audio-btn {
+  color: #67c23a;
+}
+
+.video-btn {
+  color: #f56c6c;
+}
+
+/* 编辑器包装容器 */
+.editor-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+}
+
+/* 添加额外的编辑器容器包装 */
+.editor-container-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.editor-container {
+  height: 300px;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* 强制Quill编辑器内容区域宽度固定 */
+:deep(.ql-container),
+:deep(.ql-editor) {
+  min-height: 280px;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+  box-sizing: border-box !important;
+}
+
+/* 确保图片等媒体内容不超出容器 */
+:deep(.ql-editor) img,
+:deep(.ql-editor) audio,
+:deep(.ql-editor) video {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* 确保文本内容不超出容器 */
+:deep(.ql-editor) p,
+:deep(.ql-editor) div,
+:deep(.ql-editor) h1,
+:deep(.ql-editor) h2,
+:deep(.ql-editor) h3,
+:deep(.ql-editor) h4,
+:deep(.ql-editor) h5,
+:deep(.ql-editor) h6,
+:deep(.ql-editor) ul,
+:deep(.ql-editor) ol,
+:deep(.ql-editor) li,
+:deep(.ql-editor) blockquote,
+:deep(.ql-editor) pre,
+:deep(.ql-editor) code {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+/* 确保编辑器工具栏不溢出 */
+:deep(.ql-toolbar) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  flex-wrap: wrap !important;
+}
+
+.ai-tip {
+  color: #909399;
+  font-size: 12px;
+  margin-top: 8px;
+}
+</style>
+
+<style>
+/* 全局样式修复，确保富文本编辑器内容不会溢出 */
+.ql-editor {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+.ql-editor * {
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+}
+
+.ql-editor p {
+  white-space: pre-wrap !important;
+}
+
+.ql-container {
+  max-width: 100% !important;
+}
+
+.ql-tooltip {
+  left: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
 }
 </style>

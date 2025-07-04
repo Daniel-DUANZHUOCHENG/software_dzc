@@ -1,6 +1,5 @@
 package edu.neu.oaas.service;
 
-
 import edu.neu.oaas.mapper.TenantMapper;
 import edu.neu.oaas.mapper.UserMapper;
 import edu.neu.oaas.pojo.Department;
@@ -91,21 +90,22 @@ public class TenantService {
             tenant.setCreatedAt(LocalDateTime.now());
             tenantMapper.insertTenant(tenant);
 
-//            // 插入部门
-//            department.setTenantId(tenant.getId());
-//            department.setCreatedAt(LocalDateTime.now());
-//            departmentService.insertDepartment(department);
+            // // 插入部门
+            // department.setTenantId(tenant.getId());
+            // department.setCreatedAt(LocalDateTime.now());
+            // departmentService.insertDepartment(department);
 
-//            // 更新租户的根部门ID
-//            Department insertedDepartment = departmentService.reget(0, department.getDepartmentName());
-//            tenant.setRootDepartmentId(insertedDepartment.getId());
-//            tenantMapper.updateTenant(tenant);
-//
-//            System.out.println(tenant.getId());
-//            // 插入用户
-//            user.setTenantId(tenant.getId());
-//            user.setDepartmentId(insertedDepartment.getId());
-//            userService.insertUser(user);
+            // // 更新租户的根部门ID
+            // Department insertedDepartment = departmentService.reget(0,
+            // department.getDepartmentName());
+            // tenant.setRootDepartmentId(insertedDepartment.getId());
+            // tenantMapper.updateTenant(tenant);
+            //
+            // System.out.println(tenant.getId());
+            // // 插入用户
+            // user.setTenantId(tenant.getId());
+            // user.setDepartmentId(insertedDepartment.getId());
+            // userService.insertUser(user);
 
             return true;
         } catch (Exception e) {
@@ -114,7 +114,7 @@ public class TenantService {
         }
     }
 
-    public boolean insertTenant(Tenant tenant, Department department, User user){
+    public boolean insertTenant(Tenant tenant, Department department, User user) {
         tenant.setCreatedAt(LocalDateTime.now());
         System.out.println(tenant.toString());
         tenantMapper.insertTenant2(tenant);
@@ -123,10 +123,10 @@ public class TenantService {
         Tenant tenant1 = tenantMapper.reget(tenant);
         System.out.println(tenant1.toString());
         department.setCreatedAt(LocalDateTime.now());
-        department.setParentDepartment(1);//测盟会总部门
+        department.setParentDepartment(1);// 测盟会总部门
         department.setTenantId(tenant1.getId());
         departmentService.insertDepartment(department);
-        Department department1 = departmentService.reget(1,department.getDepartmentName());
+        Department department1 = departmentService.reget(1, department.getDepartmentName());
         System.out.println(department1.toString());
         tenant1.setRootDepartmentId(department1.getId());
         updateTenant(tenant1);
@@ -135,6 +135,7 @@ public class TenantService {
         userService.insertUser(user);
         return true;
     }
+
     // 更新租户信息
     public boolean updateTenant(Tenant tenant) {
         try {
@@ -150,7 +151,6 @@ public class TenantService {
             return false;
         }
     }
-
 
     public boolean updateTenant2(Tenant tenant) {
         tenantMapper.updateTenant2(tenant.getAdminUsername(),
@@ -173,11 +173,13 @@ public class TenantService {
         return true;
     }
 
-    public List<Tenant> searchTenants(String tenantName, String contactPerson, String phone, LocalDate startDate, LocalDate endDate) {
+    public List<Tenant> searchTenants(String tenantName, String contactPerson, String phone, LocalDate startDate,
+            LocalDate endDate) {
         return tenantMapper.searchTenants(tenantName, contactPerson, phone, startDate, endDate);
     }
 
-    public void registerTenantAndUser(String tenantName, String contactperson, String Phone, String contactEmail, String username, String password) {
+    public void registerTenantAndUser(String tenantName, String contactperson, String Phone, String contactEmail,
+            String username, String password) {
         if (tenantMapper.getTenantByName(tenantName) != null) {
             throw new IllegalArgumentException("Tenant already exists");
         }
@@ -210,9 +212,15 @@ public class TenantService {
         userMapper.insertUser2(user);
     }
 
-    private static final String ICON_BASE_PATH = "E:/OAASystem/OAASystem/src/main/resources/static/icons/";
+    private static final String ICON_BASE_PATH = "src/main/resources/static/icons/";
 
     public String saveIcon(MultipartFile file) throws IOException {
+        // 确保目录存在
+        File directory = new File(ICON_BASE_PATH);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         String filePath = ICON_BASE_PATH + fileName;
 
@@ -224,9 +232,6 @@ public class TenantService {
         file.transferTo(dest);
         return "/icons/" + fileName;
     }
-
-
-
 
     public List<Tenant> getAllTenantNames() {
         return tenantMapper.getAllTenantNames(); // 使用新的方法名

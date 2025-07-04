@@ -197,6 +197,25 @@
         label-width="100px"
         class="department-form"
       >
+        <!-- AI智能填充区域 -->
+        <div class="form-section ai-section">
+          <h4><el-icon><MagicStick /></el-icon> 智能填充 (AI)</h4>
+          <el-form-item label="一句话描述">
+            <el-input 
+              v-model="aiPromptText"
+              type="textarea"
+              :rows="3"
+              placeholder="例如：创建一个名为研发部的部门，负责人是李明，电话13900001234，邮箱liming@example.com，部门状态正常"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleAiParseDepartment" :loading="aiParsing" plain>
+              <el-icon><Promotion /></el-icon> AI 解析并填充表单
+            </el-button>
+          </el-form-item>
+          <p class="ai-tip">提示：描述部门信息，AI将自动填充相关字段</p>
+        </div>
+        
         <el-form-item label="上级部门" v-if="isEdit || parentDepartment">
           <el-input 
             :value="parentDepartmentName" 
@@ -287,7 +306,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { 
   Plus, Search, Refresh, Edit, Delete, Warning, 
-  OfficeBuilding, Expand, Fold, Folder
+  OfficeBuilding, Expand, Fold, Folder, MagicStick, Promotion
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/request.js'
@@ -334,6 +353,9 @@ const departmentForm = ref<DepartmentForm>({
   managerEmail: '',
   status: 'Active'
 })
+
+const aiPromptText = ref('')
+const aiParsing = ref(false)
 
 const tableData = ref<Department[]>([])
 const totalCount = ref(0)
@@ -727,6 +749,38 @@ const formatDate = (date: string | undefined) => {
 const handleNodeClick = (data: Department) => {
   selectedDepartment.value = data
 }
+
+const handleAiParseDepartment = async () => {
+  if (!aiPromptText.value.trim()) {
+    ElMessage.warning('请输入描述信息');
+    return;
+  }
+  aiParsing.value = true;
+  try {
+    const response = await axios.post('/api/ai/parse-form/department', { text: aiPromptText.value });
+    
+    if (response.data.error) {
+      ElMessage.error('AI解析失败: ' + response.data.error);
+      return;
+    }
+    
+    const data = response.data;
+    
+    // 填充表单字段
+    if (data.departmentName) departmentForm.value.departmentName = data.departmentName;
+    if (data.manager) departmentForm.value.manager = data.manager;
+    if (data.managerPhone) departmentForm.value.managerPhone = data.managerPhone;
+    if (data.managerEmail) departmentForm.value.managerEmail = data.managerEmail;
+    if (data.status) departmentForm.value.status = data.status; // 'Active' or 'Inactive'
+    
+    ElMessage.success('AI解析并填充表单成功！请核对信息。');
+  } catch (error) {
+    console.error("AI parse error:", error);
+    ElMessage.error('调用AI解析接口失败: ' + (error.response?.data?.message || error.message));
+  } finally {
+    aiParsing.value = false;
+  }
+}
 </script>
 
 <style scoped>
@@ -760,13 +814,12 @@ const handleNodeClick = (data: Department) => {
 
 /* 搜索区域 */
 .search-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .search-card {
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .search-form {
@@ -795,26 +848,28 @@ const handleNodeClick = (data: Department) => {
 /* 主要内容区域 - 左右分栏布局 */
 .main-content {
   display: flex;
-  gap: 24px;
-  height: calc(100vh - 280px);
+  gap: 20px;
 }
 
 .left-panel {
-  width: 350px;
-  flex-shrink: 0;
+  flex: 0 0 300px; /* 固定左侧宽度 */
+  display: flex;
+  flex-direction: column;
 }
 
 .right-panel {
   flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .tree-card,
 .detail-card {
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 树形组件样式 */
@@ -822,50 +877,71 @@ const handleNodeClick = (data: Department) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 0;
 }
 
 .tree-title {
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
 }
 
-.tree-actions {
-  display: flex;
-  gap: 8px;
+.tree-actions .el-button {
+  border-radius: 8px;
+  font-weight: 600;
 }
 
 .tree-content {
-  height: calc(100% - 60px);
+  flex-grow: 1;
   overflow-y: auto;
+  padding-right: 10px;
 }
 
 .department-tree {
-  height: 100%;
+  background-color: transparent;
+}
+
+.department-tree .el-tree-node__content {
+  height: 36px;
+  line-height: 36px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.department-tree .el-tree-node__content:hover {
+  background-color: #e6f7ff;
+}
+
+.department-tree .el-tree-node.is-current > .el-tree-node__content {
+  background-color: #e0f2f7;
+  color: #007bff;
+  font-weight: bold;
 }
 
 .tree-node {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
+  flex-grow: 1;
+  padding-right: 8px;
 }
 
 .node-icon {
-  color: #667eea;
-  font-size: 16px;
+  margin-right: 8px;
+  color: #409eff;
 }
 
 .node-label {
-  flex: 1;
-  color: #2c3e50;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .node-count {
-  color: #7f8c8d;
+  color: #999;
   font-size: 12px;
-  background: #ecf0f1;
-  padding: 2px 6px;
-  border-radius: 10px;
+  margin-left: 5px;
 }
 
 /* 详情区域样式 */
@@ -873,130 +949,276 @@ const handleNodeClick = (data: Department) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 0;
 }
 
 .detail-title {
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
 }
 
-.detail-actions {
-  display: flex;
-  gap: 8px;
+.detail-actions .el-button {
+  border-radius: 8px;
+  font-weight: 600;
 }
 
 .detail-content {
-  height: calc(100% - 60px);
+  padding: 10px;
+  flex-grow: 1;
   overflow-y: auto;
 }
 
-.info-section {
-  margin-bottom: 24px;
-}
-
-.info-section h4 {
-  margin: 0 0 16px 0;
-  color: #2c3e50;
-  font-weight: 600;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #667eea;
-}
-
+.info-section,
 .children-section {
-  margin-top: 24px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 20px;
 }
 
+.info-section:last-child,
+.children-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.info-section h4,
 .children-section h4 {
-  margin: 0 0 16px 0;
-  color: #2c3e50;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: bold;
+  position: relative;
+  padding-left: 10px;
+}
+
+.info-section h4::before,
+.children-section h4::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background-color: #409eff;
+  border-radius: 2px;
+}
+
+.el-descriptions__header .el-descriptions__title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.el-descriptions-item__label {
   font-weight: 600;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #27ae60;
+}
+
+.children-section .el-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .empty-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
+  text-align: center;
+  padding: 50px;
 }
 
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #ecf0f1;
+/* Dialog Styles */
+.department-dialog .el-dialog__header {
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #ebeef5;
+  padding: 15px 20px;
+  border-radius: 12px 12px 0 0;
 }
 
-.table-info {
-  display: flex;
-  gap: 16px;
-  color: #7f8c8d;
-  font-size: 14px;
+.department-dialog .el-dialog__title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
 }
 
-.total-count {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.department-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.department-icon {
-  color: #667eea;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-/* 对话框样式 */
-.department-dialog {
-  border-radius: 16px;
+.department-dialog .el-dialog__body {
+  padding: 20px;
 }
 
 .department-form {
-  max-height: 60vh;
-  overflow-y: auto;
+  padding: 0;
 }
 
 .dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #ecf0f1;
+  padding: 15px 20px;
+  border-top: 1px solid #ebeef5;
+  text-align: right;
+  border-radius: 0 0 12px 12px;
+  background-color: #f5f7fa;
 }
 
-/* 错误对话框 */
-.error-dialog {
-  border-radius: 16px;
+.dialog-footer .el-button {
+  min-width: 80px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* AI Section Styles */
+.form-section.ai-section {
+  background-color: #e6f7ff; /* 淡蓝色背景 */
+  padding: 15px 20px;
+  margin-bottom: 25px; /* 增加与下方表单项的间距 */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* 增加阴影 */
+}
+
+.form-section.ai-section h4 {
+  color: #2196f3; /* 更深的蓝色标题 */
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.form-section.ai-section h4 .el-icon {
+  margin-right: 8px;
+  font-size: 20px;
+  color: #2196f3;
+}
+
+.form-section.ai-section .el-form-item {
+  margin-bottom: 15px; /* 调整AI区域内部表单项的间距 */
+}
+
+.form-section.ai-section .el-textarea__inner {
+  border-radius: 8px;
+  border-color: #a7d9f8;
+  background-color: #f0faff;
+}
+
+.form-section.ai-section .el-button {
+  width: 100%; /* AI按钮宽度拉满 */
+  background-color: #409eff;
+  border-color: #409eff;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.form-section.ai-section .el-button:hover {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.form-section.ai-section .el-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.form-section.ai-section .el-button .el-icon {
+  margin-right: 8px;
+}
+
+.ai-tip {
+  color: #606266; /* 提示文字颜色 */
+  font-size: 13px;
+  margin-top: 10px;
+  border-top: 1px dashed #c0dfff;
+  padding-top: 10px;
+}
+
+/* General Form Item Spacing */
+.department-form .el-form-item {
+  margin-bottom: 20px; /* 统一表单项间距 */
+}
+
+.department-form .el-form-item__label {
+  font-weight: 600;
+  color: #555;
+}
+
+/* Input and Select Styles */
+.department-form .el-input__inner,
+.department-form .el-textarea__inner,
+.department-form .el-select .el-input__inner {
+  border-radius: 8px;
+  border-color: #dcdfe6;
+}
+
+.department-form .el-input-number .el-input__inner {
+  text-align: left; /* 数字输入框文本左对齐 */
+}
+
+/* Radio Group Styles */
+.department-form .el-radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.department-form .el-radio {
+  margin-right: 0; /* 移除默认的margin-right */
+}
+
+.department-form .el-radio__inner {
+  border-color: #409eff;
+}
+
+.department-form .el-radio__input.is-checked .el-radio__inner {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+.department-form .el-radio__input.is-checked + .el-radio__label {
+  color: #409eff;
+}
+
+/* Error Dialog Styles */
+.error-dialog .el-dialog__header {
+  background-color: #fef0f0;
+  border-bottom-color: #fde2e2;
+}
+
+.error-dialog .el-dialog__title {
+  color: #f56c6c;
 }
 
 .error-content {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 0;
+  text-align: center;
+  padding: 20px;
+  color: #f56c6c;
 }
 
 .error-icon {
   font-size: 48px;
-  color: #e74c3c;
+  margin-bottom: 20px;
+  color: #f56c6c;
 }
 
 .error-content p {
-  margin: 0;
   font-size: 16px;
-  color: #2c3e50;
+  line-height: 1.5;
+}
+
+.error-dialog .dialog-footer {
+  background-color: #fef0f0;
+  border-top-color: #fde2e2;
+}
+
+.error-dialog .dialog-footer .el-button {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+}
+
+.error-dialog .dialog-footer .el-button:hover {
+  background-color: #f78989;
+  border-color: #f78989;
 }
 
 /* 响应式设计 */

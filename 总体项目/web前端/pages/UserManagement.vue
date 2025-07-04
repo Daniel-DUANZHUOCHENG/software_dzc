@@ -1273,7 +1273,7 @@ const handleAiParse = async () => {
   }
   aiParsing.value = true;
   try {
-    const response = await axios.post('/ai/parse-form/user', { text: aiPromptText.value });
+    const response = await axios.post('/api/ai/parse-form/user', { text: aiPromptText.value });
     const data = response.data;
 
     if (data.error) {
@@ -1298,7 +1298,7 @@ const handleAiParse = async () => {
 
   } catch (error) {
     console.error("AI parse error:", error);
-    ElMessage.error('调用AI解析接口失败');
+    ElMessage.error('调用AI解析接口失败: ' + (error.response?.data?.message || error.message));
   } finally {
     aiParsing.value = false;
   }

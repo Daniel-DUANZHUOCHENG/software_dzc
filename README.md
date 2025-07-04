@@ -1,17 +1,6 @@
-# 测盟汇 | 智创联盟队：新一代智能测试与质量管理平台
+# P1-测盟汇 | 智创联盟队：新一代智能测试与质量管理平台
 
-![Java](https://img.shields.io/badge/Java-17-red?style=flat-square&logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-green?style=flat-square&logo=springboot)
-![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4fc08d?style=flat-square&logo=vuedotjs)
-![WeChat Mini Program](https://img.shields.io/badge/WeChat_Mini_Program-%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F-blue?style=flat-square&logo=wechat)
-![HarmonyOS](https://img.shields.io/badge/HarmonyOS-鸿蒙-orange?style=flat-square&logo=huawei)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-blueviolet?style=flat-square&logo=mysql)
-![KingbaseES](https://img.shields.io/badge/KingbaseES-%E9%87%91%E4%BB%93%E6%95%B0%E6%8D%AE%E5%BA%93-red?style=flat-square&logo=alibabacloud)
-![Redis](https://img.shields.io/badge/Redis-cluster-red?style=flat-square&logo=redis)
-![Git](https://img.shields.io/badge/Git-version_control-red?style=flat-square&logo=git)
-![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub_Actions-blue?style=flat-square&logo=githubactions)
-![Docker](https://img.shields.io/badge/Containerization-Docker-blue?style=flat-square&logo=docker)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Java](https://img.shields.io/badge/Java-17-red?style=flat-square&logo=java) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-green?style=flat-square&logo=springboot) ![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4fc08d?style=flat-square&logo=vuedotjs) ![WeChat Mini Program](https://img.shields.io/badge/WeChat_Mini_Program-%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F-blue?style=flat-square&logo=wechat) ![HarmonyOS](https://img.shields.io/badge/HarmonyOS-鸿蒙-orange?style=flat-square&logo=huawei) ![MySQL](https://img.shields.io/badge/MySQL-8.0-blueviolet?style=flat-square&logo=mysql) ![KingbaseES](https://img.shields.io/badge/KingbaseES-%E9%87%91%E4%BB%93%E6%95%B0%E6%8D%AE%E5%BA%93-red?style=flat-square&logo=alibabacloud) ![Redis](https://img.shields.io/badge/Redis-cluster-red?style=flat-square&logo=redis) ![Git](https://img.shields.io/badge/Git-version_control-red?style=flat-square&logo=git) ![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub_Actions-blue?style=flat-square&logo=githubactions) ![Docker](https://img.shields.io/badge/Containerization-Docker-blue?style=flat-square&logo=docker) ![Ollama v0.9.5](https://img.shields.io/badge/Ollama-v0.9.5-black?style=flat-square&logo=ollama&logoColor=white) ![Dify v1.5.1](https://img.shields.io/badge/Dify-v1.5.1-blue?style=flat-square&logo=D&logoColor=white) ![Coze v1.5](https://img.shields.io/badge/Coze-v1.5-purple?style=flat-square&logo=coze&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
 
