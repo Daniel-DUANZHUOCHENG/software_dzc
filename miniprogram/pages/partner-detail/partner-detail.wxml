@@ -1,0 +1,61 @@
+<!--partner-detail.wxml-->
+<view class="partner-detail">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left">
+      <view class="back-btn" bindtap="navigateBack">
+        <image src="/assets/icons/arrow-left.png" mode="aspectFit" class="back-icon"></image>
+      </view>
+    </view>
+    <view class="nav-title">合作伙伴</view>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content">
+    <!-- Logo区域 -->
+    <view class="logo-section">
+      <image src="{{partnerInfo.logo}}" mode="aspectFit" class="partner-logo"/>
+      <view class="partner-name {{partnerInfo.website ? 'clickable' : ''}}" bindtap="navigateToWebsite">
+        {{partnerInfo.name}}
+        <view class="website-hint" wx:if="{{partnerInfo.website}}">点击复制官网网址</view>
+      </view>
+    </view>
+
+    <!-- 公司简介 -->
+    <view class="section">
+      <view class="section-title">公司简介</view>
+      <view class="section-content">{{partnerInfo.intro}}</view>
+    </view>
+
+    <!-- 发展历程 -->
+    <view class="section" wx:if="{{partnerInfo.history && partnerInfo.history.length > 0}}">
+      <view class="section-title">发展历程</view>
+      <view class="history-list">
+        <view class="history-item" wx:for="{{partnerInfo.history}}" wx:key="year">
+          <view class="year">{{item.year}}</view>
+          <view class="events">
+            <view class="event" wx:for="{{item.events}}" wx:for-item="event" wx:key="*this">
+              {{event}}
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="section" wx:if="{{partnerInfo.contact}}">
+      <view class="section-title">联系方式</view>
+      <view class="contact-info">
+        <view class="phone" wx:if="{{partnerInfo.contact.phone}}">
+          电话：{{partnerInfo.contact.phone}}
+        </view>
+        <view class="addresses" wx:if="{{partnerInfo.contact.addresses.length > 0}}">
+          <view class="address-item" wx:for="{{partnerInfo.contact.addresses}}" wx:key="name">
+            <view class="address-name">{{item.name}}：</view>
+            <view class="address-detail">{{item.address}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view> 

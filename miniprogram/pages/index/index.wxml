@@ -1,0 +1,44 @@
+<!--index.wxml-->
+<view class="page">
+ <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-title">测盟汇</view>
+  </view>
+
+  <!-- 轮播Banner -->
+  <view class="banner-box">
+    <swiper class="banner-swiper" 
+            autoplay="{{true}}" 
+            interval="3000" 
+            duration="500"
+            circular="{{true}}"
+            indicator-dots="{{true}}"
+            indicator-color="rgba(255, 255, 255, 0.6)"
+            indicator-active-color="#E53935">
+      <swiper-item wx:for="{{bannerList}}" wx:key="id">
+        <image class="banner-bg" src="{{item.image}}" mode="aspectFill" bindtap="goToMeetingDetail" data-id="{{item.id}}" />
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 协会简介 -->
+  <view class="intro-box">
+    <view class="intro-header">
+      <text class="intro-title">中国电子质量管理协会</text>
+      <text class="intro-subtitle">计算机软硬件和信息系统质量测评分会</text>
+    </view>
+    <text class="intro-content">计算机软硬件和信息系统质量测评分会是中国电子质量管理协会设立的17个分支机构之一。分会可以对计算机软硬件和信息系统所有潜在的、现有的风险进行评估及分析并对自愿申请参加能力评审的适宜评估机构进行客观、公正的能力评审，最终给出能力评审结论。</text>
+  </view>
+
+  <!-- 合作伙伴 -->
+  <view class="partner-box">
+    <view class="section-header">
+      <text class="section-title">合作伙伴</text>
+    </view>
+    <view class="partner-grid">
+      <view class="partner-item" wx:for="{{partnerList}}" wx:key="id" bindtap="goToPartnerDetail" data-id="{{item.id}}">
+        <image class="partner-logo" src="{{item.logo}}" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+</view>

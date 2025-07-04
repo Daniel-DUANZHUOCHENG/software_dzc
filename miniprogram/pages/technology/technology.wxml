@@ -1,0 +1,32 @@
+<view class="technology">
+  <!-- 导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-title">技术</view>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-box">
+    <image class="search-icon" src="/assets/icons/search.png" mode="aspectFit"></image>
+    <input class="search-input" type="text" placeholder="请搜索课程、工具或技术名称" bindinput="onSearchInput" value="{{searchKeyword}}" />
+  </view>
+
+  <!-- 课程列表 -->
+  <view class="content">
+    <view class="course-list">
+      <block wx:if="{{filteredCourses.length > 0}}">
+        <view class="course-card" wx:for="{{filteredCourses}}" wx:key="id" bindtap="goToCourseDetail" data-id="{{item.id}}">
+          <image class="course-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="course-info">
+            <view class="course-title">{{item.title}}</view>
+            <view class="course-provider">{{item.provider}}</view>
+          </view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="no-results">
+          <view class="no-results-text">未找到相关课程</view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view> 

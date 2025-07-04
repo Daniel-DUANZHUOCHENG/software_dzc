@@ -1,0 +1,188 @@
+/* 导航栏样式 */
+/* 导航栏样式 */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  padding-top: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  z-index: 100;
+  border-bottom: 1rpx solid #eee;
+}
+
+.nav-left {
+  position: absolute;
+  left: 30rpx;
+  display: flex;
+  align-items: center;
+}
+
+.nav-title {
+  flex: 1;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.back-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* 视频播放器样式 */
+.video-container {
+  position: relative;
+  top:70px;
+  width: 100%;
+  padding-top: calc(88rpx + env(safe-area-inset-top));
+  background: #000000;
+}
+
+.video-player {
+  width: 100%;
+  height: 422rpx;
+}
+
+/* 内容区域样式 */
+.content {
+  padding: 30rpx;
+  background: #FFFFFF;
+}
+
+/* 课程信息样式 */
+.course-info {
+  position: relative;
+  top:50px;
+  padding: 20rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.course-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.course-provider {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+.course-desc {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 课程目录样式 */
+.course-sections {
+  position: relative;
+  top:50px;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-left: 20rpx;
+  border-left: 6rpx solid #3a7bef;
+}
+
+.section-list {
+  padding: 0 10rpx;
+}
+
+.section-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 20rpx;
+  border-bottom: 1rpx solid #eee;
+  transition: all 0.3s;
+}
+
+.section-item:last-child {
+  border-bottom: none;
+}
+
+.section-item.active {
+  background: #f0f7ff;
+}
+
+.section-info {
+  flex: 1;
+}
+
+.section-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.play-icon {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.play-icon image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.ai-qa-btn {
+  position: relative;
+  top:70px;
+  left:100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 30rpx auto;
+  padding: 20rpx 40rpx;
+  background: #f0f7ff;
+  border-radius: 40rpx;
+  width: fit-content;
+  box-shadow: 0 4rpx 12rpx rgba(0, 110, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.ai-qa-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 6rpx rgba(0, 110, 255, 0.1);
+}
+
+.qa-text {
+  font-size: 32rpx;
+  color: #006eff;
+  font-weight: 500;
+  margin-right: 12rpx;
+}
+
+.qa-icon {
+  width: 40rpx;
+  height: 40rpx;
+} 

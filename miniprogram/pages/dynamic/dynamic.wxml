@@ -1,0 +1,45 @@
+<!-- dynamic.wxml -->
+<view class="dynamic-page">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-title">动态</view>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-box">
+    <view class="search-bar">
+      <image class="search-icon" src="/assets/icons/search.png" mode="aspectFit"></image>
+      <input 
+        class="search-input" 
+        placeholder="搜索动态、通知、政策" 
+        placeholder-class="placeholder"
+        bindinput="onSearchInput"
+        value="{{searchKeyword}}"
+      />
+    </view>
+  </view>
+
+  <!-- 动态列表 -->
+  <scroll-view scroll-y class="dynamic-list">
+    <view class="list-container">
+      <view 
+        class="dynamic-card" 
+        wx:for="{{filteredDynamics}}" 
+        wx:key="id"
+        bindtap="goToDynamicDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="card-content">
+          <view class="dynamic-header">
+            <text class="dynamic-title">{{item.title}}</text>
+          </view>
+          <view class="dynamic-summary">{{item.summary}}</view>
+          <view class="dynamic-footer">
+            <text class="dynamic-source">{{item.source}}</text>
+            <text class="dynamic-date">{{item.date}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view> 

@@ -1,0 +1,21 @@
+{
+  "name": "wxapp",
+  "version": "1.0.0",
+  "description": "微信小程序",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/runtime": "^7.22.10",
+    "miniprogram-api-promise": "^1.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.10",
+    "@babel/preset-env": "^7.22.10",
+    "typescript": "^5.1.6"
+  }
+}

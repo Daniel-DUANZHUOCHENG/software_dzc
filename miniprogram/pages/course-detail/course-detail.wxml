@@ -1,0 +1,71 @@
+<view class="course-detail">
+  <!-- 导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left">
+      <view class="back-btn" bindtap="navigateBack">
+        <image src="/assets/icons/arrow-left.png" mode="aspectFit" class="back-icon"></image>
+      </view>
+    </view>
+    <view class="nav-title">技术详情</view>
+  </view>
+
+  <!-- 视频播放区域 -->
+  <view class="video-container">
+    <video 
+      id="courseVideo"
+      src="{{currentVideo}}"
+      autoplay="{{false}}"
+      show-center-play-btn="{{true}}"
+      controls
+      custom-cache="{{false}}"
+      class="video-player"
+      object-fit="contain"
+      bindplay="onVideoPlay"
+      bindpause="onVideoPause"
+      binderror="onVideoError"
+      enable-progress-gesture="{{true}}"
+      initial-time="0"
+    ></video>
+  </view>
+
+  <!-- AI智能问答按钮 -->
+  <view class="ai-qa-btn" bindtap="goToQA">
+    <text class="qa-text">AI智能问答</text>
+    <image src="/assets/icons/qa.png" mode="aspectFit" class="qa-icon"></image>
+  </view>
+
+  <!-- 课程信息 -->
+  <view class="content">
+    <!-- 课程简介 -->
+    <view class="course-info">
+      <view class="course-title">{{course.title}}</view>
+      <view class="course-provider">提供方：{{course.provider}}</view>
+      <view class="course-desc">{{course.description}}</view>
+    </view>
+
+    <!-- 课程目录 -->
+    <view class="course-sections">
+      <view class="section-title">课程章节</view>
+      <view class="section-list">
+        <view 
+          class="section-item {{currentSectionId === section.id ? 'active' : ''}}" 
+          wx:for="{{course.sections}}" 
+          wx:key="id" 
+          wx:for-item="section"
+          bindtap="switchVideo"
+          data-section="{{section}}"
+        >
+          <view class="section-info">
+            <view class="section-name">{{section.title}}</view>
+          </view>
+          <view class="play-icon">
+            <image 
+              src="/assets/icons/{{currentSectionId === section.id && isPlaying ? 'pause' : 'play'}}.png" 
+              mode="aspectFit"
+            ></image>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view> 

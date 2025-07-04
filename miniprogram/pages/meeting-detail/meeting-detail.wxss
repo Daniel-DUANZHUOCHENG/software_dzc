@@ -1,0 +1,814 @@
+.container {
+  padding-bottom: 120rpx;
+}
+
+.cover-image {
+  width: 100%;
+  height: 400rpx;
+}
+
+/* 会议基本信息样式 */
+.info-section {
+  padding: 30rpx;
+  background: #fff;
+  margin-bottom: 20rpx;
+}
+
+.meeting-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.info-item {
+  display: flex;
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.info-item .label {
+  color: #999;
+  margin-right: 20rpx;
+}
+
+/* 通用区块样式 */
+.section {
+  margin: 20rpx 0;
+  padding: 30rpx;
+  background: #fff;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-left: 20rpx;
+  border-left: 8rpx solid #3B82F6;
+}
+
+.description {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* 会议议程样式 */
+.agenda-list {
+  margin-top: 20rpx;
+}
+
+.agenda-item {
+  display: flex;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.agenda-item:last-child {
+  border-bottom: none;
+}
+
+.agenda-item .time {
+  width: 180rpx;
+  font-size: 26rpx;
+  color: #3B82F6;
+  flex-shrink: 0;
+}
+
+.agenda-item .content {
+  flex: 1;
+}
+
+.agenda-item .title {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.agenda-item .speaker {
+  font-size: 26rpx;
+  color: #666;
+}
+
+
+/* 报名按钮样式 */
+.register-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 30rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.register-btn {
+  position: relative;
+  top: 40px;
+  padding: 16rpx 36rpx;
+  background: #3a7bff;
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 32rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(58, 123, 255, 0.2);
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.register-btn::after {
+  border: none;
+}
+
+.register-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 6rpx rgba(58, 123, 255, 0.2);
+}
+
+/* meeting-detail.wxss */
+.page {
+  min-height: 100vh;
+  background-color: #f6f6f6;
+  padding-bottom: 40rpx;
+}
+
+/* 会议详情样式 */
+.meeting-info {
+  margin-top: 88rpx;
+  background-color: #fff;
+}
+
+.meeting-banner {
+  width: 100%;
+  height: auto;
+}
+
+.meeting-content {
+  padding: 30rpx;
+}
+
+.meeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.meeting-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.meeting-status {
+  font-size: 24rpx;
+  color: #0052d9;
+  padding: 4rpx 16rpx;
+  background: rgba(0, 82, 217, 0.1);
+  border-radius: 4rpx;
+}
+
+.meeting-meta {
+  margin-bottom: 30rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.meta-item .label {
+  color: #999;
+  margin-right: 10rpx;
+  min-width: 84rpx;
+}
+
+.meeting-description {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 回执表单样式 */
+.registration-form {
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-header {
+  padding: 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.form-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-content {
+  padding: 30rpx;
+  max-height: calc(90vh - 200rpx);
+}
+
+.form-group {
+  margin-bottom: 30rpx;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.required {
+  color: #e34d59;
+  margin-left: 4rpx;
+}
+
+.form-footer {
+  margin-top: 40rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* TDesign组件样式调整 */
+.t-input {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 20rpx;
+}
+
+.t-radio-group {
+  display: flex;
+  gap: 30rpx;
+}
+
+.t-picker {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 20rpx;
+}
+
+.t-textarea {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  min-height: 200rpx;
+}
+
+/* 导航栏样式 */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  padding-top: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding-left: 30rpx;
+  z-index: 100;
+  border-bottom: 1rpx solid #eee;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
+.back-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* 内容区域样式 */
+.content {
+  margin-top: 120rpx;
+  padding: 30rpx;
+}
+
+/* 会议图片样式 */
+.meeting-images {
+  width: 100%;
+}
+
+.meeting-img {
+  position: relative;
+  top:60px;
+  width: 100%;
+  margin-bottom: 20rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 弹窗样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  width: 90%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 40rpx;
+  color: #999;
+  padding: 10rpx;
+}
+
+/* 表单样式 */
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+input {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+radio-group {
+  display: flex;
+  gap: 30rpx;
+}
+
+radio {
+  transform: scale(0.8);
+}
+
+.picker {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  line-height: 80rpx;
+  box-sizing: border-box;
+  color: #333;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  background: #3a7bff;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 8rpx;
+  margin-top: 30rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 头部区域样式 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30rpx;
+  width: 100%;
+}
+
+.page-title {
+  position: relative;
+  top:40px;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.register-btn {
+  position: relative;
+  top: 40px;
+  left: 60px;
+  width: 240rpx;
+  padding: 16rpx 0;
+  background: #3a7bff;
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 32rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(58, 123, 255, 0.2);
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.register-btn::after {
+  border: none;
+}
+
+.register-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 6rpx rgba(58, 123, 255, 0.2);
+}
+
+/* meeting-detail.wxss */
+.page {
+  min-height: 100vh;
+  background-color: #f6f6f6;
+  padding-bottom: 40rpx;
+}
+
+/* 会议详情样式 */
+.meeting-info {
+  margin-top: 88rpx;
+  background-color: #fff;
+}
+
+.meeting-banner {
+  width: 100%;
+  height: auto;
+}
+
+.meeting-content {
+  padding: 30rpx;
+}
+
+.meeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.meeting-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.meeting-status {
+  font-size: 24rpx;
+  color: #0052d9;
+  padding: 4rpx 16rpx;
+  background: rgba(0, 82, 217, 0.1);
+  border-radius: 4rpx;
+}
+
+.meeting-meta {
+  margin-bottom: 30rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.meta-item .label {
+  color: #999;
+  margin-right: 10rpx;
+  min-width: 84rpx;
+}
+
+.meeting-description {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 回执表单样式 */
+.registration-form {
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-header {
+  padding: 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.form-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-content {
+  padding: 30rpx;
+  max-height: calc(90vh - 200rpx);
+}
+
+.form-group {
+  margin-bottom: 30rpx;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.required {
+  color: #e34d59;
+  margin-left: 4rpx;
+}
+
+.form-footer {
+  margin-top: 40rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* TDesign组件样式调整 */
+.t-input {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 20rpx;
+}
+
+.t-radio-group {
+  display: flex;
+  gap: 30rpx;
+}
+
+.t-picker {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 20rpx;
+}
+
+.t-textarea {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  min-height: 200rpx;
+}
+
+/* 导航栏样式 */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  padding-top: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding-left: 30rpx;
+  z-index: 100;
+  border-bottom: 1rpx solid #eee;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
+.back-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* 内容区域样式 */
+.content {
+  margin-top: 120rpx;
+  padding: 30rpx;
+}
+
+/* 会议图片样式 */
+.meeting-images {
+  width: 100%;
+}
+
+.meeting-img {
+  position: relative;
+  top:60px;
+  width: 100%;
+  margin-bottom: 20rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 弹窗样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  width: 90%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 40rpx;
+  color: #999;
+  padding: 10rpx;
+}
+
+/* 表单样式 */
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+input {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+radio-group {
+  display: flex;
+  gap: 30rpx;
+}
+
+radio {
+  transform: scale(0.8);
+}
+
+.picker {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  line-height: 80rpx;
+  box-sizing: border-box;
+  color: #333;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  background: #3a7bff;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 8rpx;
+  margin-top: 30rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 头部区域样式 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30rpx;
+  width: 100%;
+}
+
+.page-title {
+  position: relative;
+  top:40px;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.register-btn {
+  position: relative;
+  top: 40px;
+  left: 60px;
+  width: 240rpx; /* 设置固定宽度 */
+  padding: 16rpx 0; /* 修改内边距 */
+  background: #3a7bff;
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 32rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(58, 123, 255, 0.2);
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.register-btn::after {
+  border: none;
+}
+
+.register-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 6rpx rgba(58, 123, 255, 0.2);
+}

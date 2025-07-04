@@ -1,0 +1,78 @@
+<view class="qa-page">
+  <!-- 导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left">
+      <view class="back-btn" bindtap="navigateBack">
+        <image src="/assets/icons/arrow-left.png" mode="aspectFit" class="back-icon"></image>
+      </view>
+    </view>
+    <view class="nav-title">AI智能问答</view>
+  </view>
+
+  <!-- 聊天内容区域 -->
+  <scroll-view 
+    class="chat-container"
+    scroll-y
+    scroll-into-view="{{scrollToMessage}}"
+    bindscrolltoupper="onScrollToUpper"
+  >
+    <view class="chat-list">
+      <!-- 欢迎消息 -->
+      <view class="message bot">
+        <view class="avatar">
+          <image src="/assets/icons/bot-avatar.png" mode="aspectFit"></image>
+        </view>
+        <view class="content">
+          <text>嗨，你好！我专注于为你解答视频相关问题，提供精准答案。</text>
+        </view>
+      </view>
+
+      <!-- 消息列表 -->
+      <view 
+        wx:for="{{messages}}" 
+        wx:key="id"
+        class="message {{item.type}}"
+        id="msg-{{item.id}}"
+      >
+        <view class="avatar">
+          <image src="{{item.type === 'bot' ? '/assets/icons/bot-avatar.png' : '/assets/icons/user-avatar.png'}}" mode="aspectFit"></image>
+        </view>
+        <view class="content">
+          <text>{{item.content}}</text>
+        </view>
+      </view>
+
+      <!-- 加载状态 -->
+      <view class="message bot" wx:if="{{loading}}">
+        <view class="avatar">
+          <image src="/assets/icons/bot-avatar.png" mode="aspectFit"></image>
+        </view>
+        <view class="content">
+          <view class="typing-indicator">
+            <view class="dot"></view>
+            <view class="dot"></view>
+            <view class="dot"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部输入区域 -->
+  <view class="input-container">
+    <view class="input-box">
+      <input 
+        class="input"
+        type="text"
+        value="{{inputValue}}"
+        placeholder="请输入你的问题"
+        bindinput="onInput"
+        bindconfirm="sendMessage"
+        confirm-type="send"
+      />
+      <view class="send-btn {{inputValue ? 'active' : ''}}" bindtap="sendMessage">
+        <image src="/assets/icons/send.png" mode="aspectFit" class="send-icon"></image>
+      </view>
+    </view>
+  </view>
+</view> 

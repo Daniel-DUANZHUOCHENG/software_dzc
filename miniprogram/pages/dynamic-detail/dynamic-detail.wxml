@@ -1,0 +1,24 @@
+<view class="dynamic-detail">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left">
+      <view class="back-btn" bindtap="navigateBack">
+        <image src="/assets/icons/arrow-left.png" mode="aspectFit" class="back-icon"></image>
+      </view>
+    </view>
+    <view class="nav-title">动态详情</view>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content">
+    <view class="article">
+      <!-- 标题 -->
+      <view class="article-title">{{dynamic.title}}</view>
+      
+      <!-- 正文内容 -->
+      <view class="article-content" style="text-indent:2em">
+        <rich-text nodes="{{dynamic.content}}"></rich-text>
+      </view>
+    </view>
+  </view>
+</view> 

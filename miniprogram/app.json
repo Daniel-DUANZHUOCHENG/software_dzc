@@ -1,0 +1,66 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/technology/technology",
+    "pages/course-detail/course-detail",
+    "pages/dynamic/dynamic",
+    "pages/dynamic-detail/dynamic-detail",
+    "pages/cooperation/cooperation",
+    "pages/meeting-detail/meeting-detail",
+    "pages/partner-detail/partner-detail",
+    "pages/course-detail-qa/course-detail-qa"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": false,
+    "color": "#999999",
+    "selectedColor": "#4e85fd",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/technology/technology",
+        "text": "技术",
+        "iconPath": "assets/icons/tech.png",
+        "selectedIconPath": "assets/icons/tech-active.png"
+      },
+      {
+        "pagePath": "pages/dynamic/dynamic",
+        "text": "动态",
+        "iconPath": "assets/icons/dynamic.png",
+        "selectedIconPath": "assets/icons/dynamic-active.png"
+      },
+      {
+        "pagePath": "pages/cooperation/cooperation",
+        "text": "合作",
+        "iconPath": "assets/icons/cooperation.png",
+        "selectedIconPath": "assets/icons/cooperation-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "useExtendedLib": {
+    "weui": true
+  },
+  "usingComponents": {
+    "t-action-sheet": "tdesign-miniprogram/action-sheet/action-sheet",
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-input": "tdesign-miniprogram/input/input",
+    "t-textarea": "tdesign-miniprogram/textarea/textarea",
+    "t-radio": "tdesign-miniprogram/radio/radio",
+    "t-radio-group": "tdesign-miniprogram/radio-group/radio-group",
+    "t-picker": "tdesign-miniprogram/picker/picker",
+    "t-picker-item": "tdesign-miniprogram/picker-item/picker-item"
+  },
+  "cloud": true
+}
