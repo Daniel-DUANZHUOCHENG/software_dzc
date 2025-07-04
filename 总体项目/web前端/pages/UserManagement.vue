@@ -232,66 +232,52 @@
     <el-dialog 
       v-model="dialogVisible" 
       :title="isEditMode ? '编辑用户' : '添加用户'" 
-      width="600px"
+      :width="isEditMode ? '80%' : '600px'"
       :close-on-click-modal="false"
       append-to-body
       draggable
     >
+      <!-- ADD MODE: v-if="!isEditMode" -->
       <el-form 
+        v-if="!isEditMode"
         :model="userForm" 
         :rules="userRules" 
         ref="userFormRef"
         label-width="100px"
         class="user-form"
       >
-        <div v-if="!isEditMode" class="form-section ai-section">
-            <h4>
-              <el-icon><MagicStick /></el-icon>
-              智能填充 (AI)
-            </h4>
-            <el-form-item label="一句话描述">
-              <el-input 
-                v-model="aiPromptText"
-                type="textarea"
-                :rows="3"
-                placeholder="例如：创建一个叫李四的用户，职位是产品经理，分配到百度，手机号是13812345678"
-              />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleAiParse" :loading="aiParsing" plain>
-                <el-icon><Promotion /></el-icon>
-                AI 解析并填充表单
-              </el-button>
-            </el-form-item>
+        <div class="form-section ai-section">
+          <h4><el-icon><MagicStick /></el-icon> 智能填充 (AI)</h4>
+          <el-form-item label="一句话描述">
+            <el-input 
+              v-model="aiPromptText"
+              type="textarea"
+              :rows="3"
+              placeholder="例如：创建一个叫李四的用户，职位是产品经理，分配到百度，手机号是13812345678"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleAiParse" :loading="aiParsing" plain>
+              <el-icon><Promotion /></el-icon> AI 解析并填充表单
+            </el-button>
+          </el-form-item>
         </div>
-
         <div class="form-section">
           <h4>基本信息</h4>
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="用户名" prop="username">
-                <el-input v-model="userForm.username" placeholder="请输入用户名" :disabled="isEditMode" />
+                <el-input v-model="userForm.username" placeholder="请输入用户名" />
               </el-form-item>
             </el-col>
-            <el-col :span="12" v-if="!isEditMode">
+            <el-col :span="12">
               <el-form-item label="密码" prop="password">
-                <el-input 
-                  v-model="userForm.password" 
-                  type="password" 
-                  placeholder="请输入密码"
-                  show-password
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12" v-else>
-               <el-form-item label="昵称" prop="nickname">
-                <el-input v-model="userForm.nickname" placeholder="请输入昵称" />
+                <el-input v-model="userForm.password" type="password" placeholder="请输入密码" show-password />
               </el-form-item>
             </el-col>
           </el-row>
-          
           <el-row :gutter="20">
-            <el-col :span="12" v-if="!isEditMode">
+            <el-col :span="12">
               <el-form-item label="昵称" prop="nickname">
                 <el-input v-model="userForm.nickname" placeholder="请输入昵称" />
               </el-form-item>
@@ -306,7 +292,6 @@
             </el-col>
           </el-row>
         </div>
-        
         <div class="form-section">
           <h4>联系信息</h4>
           <el-row :gutter="20">
@@ -322,7 +307,6 @@
             </el-col>
           </el-row>
         </div>
-        
         <div class="form-section">
           <h4>权限设置</h4>
           <el-row :gutter="20">
@@ -343,7 +327,6 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="职位">
@@ -352,32 +335,64 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="部门">
-                <el-tree
-                  :data="treeData"
-                  :props="treeProps"
-                  show-checkbox
-                  node-key="id"
-                  :check-strictly="true"
-                  @check-change="handleDepartmentCheckChange"
-                  class="department-select-tree"
-                />
+                <el-tree :data="treeData" :props="treeProps" show-checkbox node-key="id" :check-strictly="true" @check-change="handleDepartmentCheckChange" class="department-select-tree" />
               </el-form-item>
             </el-col>
           </el-row>
         </div>
-        
         <div class="form-section">
           <h4>其他信息</h4>
           <el-form-item label="备注">
-            <el-input 
-              v-model="userForm.remark" 
-              type="textarea" 
-              :rows="3"
-              placeholder="请输入备注信息"
-            />
+            <el-input v-model="userForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
           </el-form-item>
         </div>
       </el-form>
+
+      <!-- EDIT MODE: v-else -->
+      <div v-else>
+        <div class="form-section ai-section">
+          <h4><el-icon><MagicStick /></el-icon> AI 辅助修改</h4>
+          <el-form-item label="修改指令" label-width="100px">
+            <el-input v-model="aiPromptText" type="textarea" :rows="3" placeholder="例如：将职位改为高级软件工程师，并更新手机号为188..." />
+          </el-form-item>
+          <el-form-item label-width="100px">
+            <el-button type="primary" @click="handleAiParse" :loading="aiParsing" plain>
+              <el-icon><Promotion /></el-icon> AI 解析并填充到右侧
+            </el-button>
+          </el-form-item>
+        </div>
+        <div class="edit-container">
+          <!-- Left Panel -->
+          <div class="panel left-panel">
+            <h3>修改前</h3>
+            <el-form :model="originalUserForm" label-width="80px" disabled>
+              <el-form-item label="用户名"><el-input v-model="originalUserForm.username" /></el-form-item>
+              <el-form-item label="昵称"><el-input v-model="originalUserForm.nickname" /></el-form-item>
+              <el-form-item label="性别"><el-select v-model="originalUserForm.gender" style="width: 100%"><el-option label="男" value="Male" /><el-option label="女" value="Female" /></el-select></el-form-item>
+              <el-form-item label="邮箱"><el-input v-model="originalUserForm.email" /></el-form-item>
+              <el-form-item label="手机号"><el-input v-model="originalUserForm.phoneNumber" /></el-form-item>
+              <el-form-item label="职位"><el-input v-model="originalUserForm.position" /></el-form-item>
+              <el-form-item label="角色"><el-select v-model="originalUserForm.role" style="width: 100%"><el-option label="管理员" value="Admin" /><el-option label="普通用户" value="User" /></el-select></el-form-item>
+              <el-form-item label="状态"><el-radio-group v-model="originalUserForm.status"><el-radio label="Active">正常</el-radio><el-radio label="Inactive">停用</el-radio></el-radio-group></el-form-item>
+            </el-form>
+          </div>
+          <!-- Right Panel -->
+          <div class="panel right-panel">
+            <h3>修改后 (AI填充 & 可编辑)</h3>
+            <el-form :model="userForm" :rules="userRules" ref="userFormRef" label-width="80px">
+              <el-form-item label="用户名" prop="username"><el-input v-model="userForm.username" disabled /></el-form-item>
+              <el-form-item label="昵称" prop="nickname"><el-input v-model="userForm.nickname" /></el-form-item>
+              <el-form-item label="性别"><el-select v-model="userForm.gender" style="width: 100%"><el-option label="男" value="Male" /><el-option label="女" value="Female" /></el-select></el-form-item>
+              <el-form-item label="邮箱"><el-input v-model="userForm.email" /></el-form-item>
+              <el-form-item label="手机号"><el-input v-model="userForm.phoneNumber" /></el-form-item>
+              <el-form-item label="职位"><el-input v-model="userForm.position" /></el-form-item>
+              <el-form-item label="角色"><el-select v-model="userForm.role" style="width: 100%"><el-option label="管理员" value="Admin" /><el-option label="普通用户" value="User" /></el-select></el-form-item>
+              <el-form-item label="状态"><el-radio-group v-model="userForm.status"><el-radio label="Active">正常</el-radio><el-radio label="Inactive">停用</el-radio></el-radio-group></el-form-item>
+              <el-form-item label="部门"><el-tree :data="treeData" :props="treeProps" show-checkbox node-key="id" :check-strictly="true" @check-change="handleDepartmentCheckChange" class="department-select-tree" /></el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </div>
       
       <template #footer>
         <div class="dialog-footer">
@@ -426,6 +441,7 @@ import axios from '../utils/request.js'
 // 响应式数据
 const aiPromptText = ref('')
 const aiParsing = ref(false)
+const originalUserForm = ref({}) // 新增：用于存放修改前的用户数据
 
 const isEditMode = ref(false) // 是否为编辑模式
 const departmentSearch = ref('')
@@ -1043,12 +1059,20 @@ const handleAddUser = () => {
 
 const handleEditUser = (row) => {
   isEditMode.value = true
-  userForm.value = { ...row }
   dialogVisible.value = true
+  aiPromptText.value = '' // 清空AI输入框
+
+  const cleanRow = { ...row }
+  // 确保密码不在表单中显示
+  delete cleanRow.password;
+
+  // 使用深拷贝，防止响应式对象互相影响
+  originalUserForm.value = JSON.parse(JSON.stringify(cleanRow))
+  userForm.value = JSON.parse(JSON.stringify(cleanRow))
 }
 
 const handleSaveUser = async () => {
-  if (!userFormRef.value) return;
+  if (!userFormRef.value) return
   try {
     await userFormRef.value.validate();
   } catch (error) {
@@ -1529,11 +1553,7 @@ const handleAiParse = async () => {
 }
 
 .department-select-tree {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  padding: 8px;
+  width: 100%;
 }
 
 /*
@@ -1661,5 +1681,33 @@ const handleAiParse = async () => {
 :deep(.el-button) {
   border-radius: 8px;
   font-weight: 500;
+}
+
+.edit-container {
+  display: flex;
+  gap: 20px;
+}
+
+.panel {
+  flex: 1;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.panel h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333;
+  font-weight: 600;
+}
+
+.left-panel {
+  background-color: #f5f5f5;
+}
+
+.right-panel {
+  background-color: #ffffff;
 }
 </style>
