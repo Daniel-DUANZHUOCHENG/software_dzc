@@ -244,6 +244,27 @@
         label-width="100px"
         class="user-form"
       >
+        <div v-if="!isEditMode" class="form-section ai-section">
+            <h4>
+              <el-icon><MagicStick /></el-icon>
+              智能填充 (AI)
+            </h4>
+            <el-form-item label="一句话描述">
+              <el-input 
+                v-model="aiPromptText"
+                type="textarea"
+                :rows="3"
+                placeholder="例如：创建一个叫李四的用户，职位是产品经理，分配到百度，手机号是13812345678"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleAiParse" :loading="aiParsing" plain>
+                <el-icon><Promotion /></el-icon>
+                AI 解析并填充表单
+              </el-button>
+            </el-form-item>
+        </div>
+
         <div class="form-section">
           <h4>基本信息</h4>
           <el-row :gutter="20">
@@ -397,12 +418,15 @@
 import { ref, onMounted, computed } from 'vue'
 import { 
   Plus, Upload, Download, Refresh, Search, User, Phone, 
-  Edit, Delete, Folder, Warning 
+  Edit, Delete, Folder, Warning, MagicStick, Promotion
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/request.js'
 
 // 响应式数据
+const aiPromptText = ref('')
+const aiParsing = ref(false)
+
 const isEditMode = ref(false) // 是否为编辑模式
 const departmentSearch = ref('')
 const searchCriteria = ref({
@@ -996,6 +1020,12 @@ const handleCurrentChange = (page) => {
 
 const handleAddUser = () => {
   isEditMode.value = false
+  dialogVisible.value = true
+  aiPromptText.value = '' // 清空AI输入框
+  // 重置表单
+  if (userFormRef.value) {
+    userFormRef.value.resetFields()
+  }
   userForm.value = {
     username: '',
     password: '',
@@ -1009,7 +1039,6 @@ const handleAddUser = () => {
     remark: '',
     departmentId: 1
   }
-  dialogVisible.value = true
 }
 
 const handleEditUser = (row) => {
@@ -1212,6 +1241,44 @@ const handleDepartmentCheckChange = (data, checked) => {
     userForm.value.departmentId = data.id
   }
 }
+
+const handleAiParse = async () => {
+  if (!aiPromptText.value.trim()) {
+    ElMessage.warning('请输入描述信息');
+    return;
+  }
+  aiParsing.value = true;
+  try {
+    const response = await axios.post('/ai/parse-form/user', { text: aiPromptText.value });
+    const data = response.data;
+
+    if (data.error) {
+      ElMessage.error('AI解析失败: ' + data.error);
+      return;
+    }
+
+    // 动态填充表单
+    for (const key in data) {
+      if (key in userForm.value) {
+        userForm.value[key] = data[key];
+      }
+    }
+    
+    ElMessage.success('AI填充成功！请核对信息。');
+
+    // 特殊处理部门信息
+    if (data.departmentName) {
+      console.log(`AI识别到部门为: "${data.departmentName}"。由于部门是树形选择器，需要您手动选择对应的部门。`);
+      ElMessage.info(`AI识别到部门为: "${data.departmentName}"，请手动选择。`);
+    }
+
+  } catch (error) {
+    console.error("AI parse error:", error);
+    ElMessage.error('调用AI解析接口失败');
+  } finally {
+    aiParsing.value = false;
+  }
+};
 </script>
 
 <style scoped>
