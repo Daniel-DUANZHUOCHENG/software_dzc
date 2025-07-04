@@ -1,27 +1,77 @@
-# IDE / Editor specific settings
-.vscode/
+# ===================================================================
+# General
+# ===================================================================
+.DS_Store
+*.log
+*.tmp
+*.bak
+*.swp
+
+# ===================================================================
+# IDE specific
+# ===================================================================
+# IntelliJ IDEA
 .idea/
+*.iml
+*.iws
 
-# Dependencies
-/node_modules/
+# Visual Studio Code
+.vscode/
 
-# Build output folders
-/dist/
-/build/
-/unpackage/
-/target/
+# ===================================================================
+# Java / Maven
+# ===================================================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/
+hs_err_pid*.log
 
-# Log files
+# ===================================================================
+# Node.js / Vue.js
+# ===================================================================
+node_modules/
+dist/
+dist-ssr/
+*.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# OS-generated files
-.DS_Store
-Thumbs.db
-._*
+# =/
+# uni-app specific (based on project structure)
+# ===================================================================
+unpackage/
 
+# ===================================================================
+# User uploaded content & Archives
+# (These should not be in version control)
+# ===================================================================
+*.zip
+*.rar
+*.7z
+
+# Backend uploaded files
+总体项目/后端/avatar/
+总体项目/后端/OAASystem/src/main/resources/static/CourseCover/
+总体项目/后端/OAASystem/src/main/resources/static/images/
+总体项目/后端/OAASystem/src/main/resources/static/Video/
+src/main/resources/static/CourseCover/
+src/main/resources/static/images/
+src/main/resources/static/Video/
+avatar/
+
+# ===================================================================
 # Environment variables
+# ===================================================================
 .env
-.env*.local
+.env.development
+.env.production
+.env.local
+.env.*.local
