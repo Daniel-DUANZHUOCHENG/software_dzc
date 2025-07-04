@@ -1,0 +1,9 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/DetailPage",
+    "view/News/TutorialDetail",
+    "view/Tech/TechDetail",
+    "pages/CooperationGalleryPage"
+  ]
+}
