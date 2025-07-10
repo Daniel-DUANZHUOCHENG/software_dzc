@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-item {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .loading {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .json-result {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>OAA系统 API 连接测试</h1>
+    <p>这个页面用于测试前后端API连接是否正常</p>
+
+    <div class="test-item">
+        <h3>1. 后端连接测试</h3>
+        <button onclick="testBackendConnection()">测试后端连接</button>
+        <div id="backend-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>2. 用户列表API测试</h3>
+        <button onclick="testUsersAPI()">测试用户列表</button>
+        <div id="users-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>3. 课程列表API测试</h3>
+        <button onclick="testCoursesAPI()">测试课程列表</button>
+        <div id="courses-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>4. 租户列表API测试</h3>
+        <button onclick="testTenantsAPI()">测试租户列表</button>
+        <div id="tenants-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>5. 会议列表API测试</h3>
+        <button onclick="testConferencesAPI()">测试会议列表</button>
+        <div id="conferences-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>6. 数据库连接测试</h3>
+        <button onclick="testDatabaseConnection()">测试数据库连接</button>
+        <div id="database-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>7. 系统环境测试</h3>
+        <button onclick="testSystemEnvironment()">测试系统环境</button>
+        <div id="environment-result"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>8. 全面测试</h3>
+        <button onclick="runAllTests()">运行所有测试</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:9049';
+
+        function updateResult(elementId, status, message, data = null) {
+            const element = document.getElementById(elementId);
+            element.className = `test-item ${status}`;
+            
+            let html = `<strong>${status.charAt(0).toUpperCase() + status.slice(1)}:</strong> ${message}`;
+            if (data) {
+                html += `<div class="json-result">${JSON.stringify(data, null, 2)}</div>`;
+            }
+            element.innerHTML = html;
+        }
+
+        async function testAPI(url, elementId, description) {
+            updateResult(elementId, 'loading', `正在测试 ${description}...`);
+            
+            try {
+                console.log(`🧪 测试 ${description}:`, url);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                console.log(`📊 ${description} 响应状态:`, response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(`✅ ${description} 成功:`, data);
+                    updateResult(elementId, 'success', `${description} 连接成功！状态码: ${response.status}`, data);
+                    return true;
+                } else {
+                    const errorText = await response.text();
+                    console.error(`❌ ${description} 失败:`, response.status, errorText);
+                    updateResult(elementId, 'error', `${description} 失败！状态码: ${response.status}`, { error: errorText });
+                    return false;
+                }
+            } catch (error) {
+                console.error(`💥 ${description} 异常:`, error);
+                updateResult(elementId, 'error', `${description} 异常: ${error.message}`, { error: error.toString() });
+                return false;
+            }
+        }
+
+        async function testBackendConnection() {
+            await testAPI(`${API_BASE_URL}/users/test`, 'backend-result', '后端连接');
+        }
+
+        async function testUsersAPI() {
+            await testAPI(`${API_BASE_URL}/users/all`, 'users-result', '用户列表API');
+        }
+
+        async function testCoursesAPI() {
+            await testAPI(`${API_BASE_URL}/api/courses`, 'courses-result', '课程列表API');
+        }
+
+        async function testTenantsAPI() {
+            await testAPI(`${API_BASE_URL}/api/tenants/all`, 'tenants-result', '租户列表API');
+        }
+
+        async function testConferencesAPI() {
+            await testAPI(`${API_BASE_URL}/conferences`, 'conferences-result', '会议列表API');
+        }
+
+        async function testDatabaseConnection() {
+            await testAPI(`${API_BASE_URL}/api/test/database`, 'database-result', '数据库连接');
+        }
+
+        async function testSystemEnvironment() {
+            await testAPI(`${API_BASE_URL}/api/test/environment`, 'environment-result', '系统环境');
+        }
+
+        async function runAllTests() {
+            console.log('🚀 开始运行所有API测试...');
+            
+            await testBackendConnection();
+            await new Promise(resolve => setTimeout(resolve, 500)); // 等待500ms
+            
+            await testDatabaseConnection();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testSystemEnvironment();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testUsersAPI();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testCoursesAPI();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testTenantsAPI();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testConferencesAPI();
+            
+            console.log('✅ 所有API测试完成！');
+        }
+
+        // 页面加载完成后自动运行后端连接测试
+        window.addEventListener('load', () => {
+            console.log('🔧 页面加载完成，准备进行API测试');
+            testBackendConnection();
+        });
+    </script>
+</body>
+</html> 

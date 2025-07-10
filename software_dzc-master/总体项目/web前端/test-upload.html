@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+        .preview-image {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>文件上传测试</h1>
+        
+        <div class="form-group">
+            <label for="fileInput">选择文件：</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        
+        <button id="uploadBtn">上传文件</button>
+        
+        <div id="result">
+            <p>上传结果将显示在这里</p>
+        </div>
+        
+        <div id="imagePreview"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            const imagePreview = document.getElementById('imagePreview');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                resultDiv.innerHTML = '<p style="color: red;">请先选择文件</p>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            resultDiv.innerHTML = '<p>上传中，请稍候...</p>';
+            
+            try {
+                const response = await fetch('/api/tenants/upload-icon', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`上传失败，状态码: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p style="color: green;">上传成功！</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                // 显示预览图片
+                if (data.url) {
+                    const imgUrl = data.url.startsWith('http') 
+                        ? data.url 
+                        : `http://localhost:9049${data.url}`;
+                    
+                    imagePreview.innerHTML = `
+                        <h3>图片预览：</h3>
+                        <img src="${imgUrl}" alt="上传的图片" class="preview-image">
+                        <p>图片URL: ${imgUrl}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">上传失败：${error.message}</p>
+                `;
+                console.error('上传错误:', error);
+            }
+        });
+    </script>
+</body>
+</html> 
