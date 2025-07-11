@@ -103,9 +103,27 @@ public class UserMapperTest {
 
     @Test
     public void testFindByPathPrefix() {
+        // Clean up any existing test data
+        userMapper.deleteByPath("1");
+        userMapper.deleteByPath("999");
+        
+        // Test with matching prefix
+        user.setPath("1/2/3");
         userMapper.insertUser2(user);
+        
+        // Update the user's path
+        user.setId(user.getId());  // Make sure we have the ID from the insert
+        userMapper.updateUser2(user);
+        
         List<User> users = userMapper.findByPathPrefix("1");
-        assertFalse(users.isEmpty());
+        assertFalse(users.isEmpty(), "Users list should not be empty for matching prefix");
+        for (User u : users) {
+            assertTrue(u.getPath() != null && u.getPath().startsWith("1"), "User path should start with prefix");
+        }
+
+        // Test with non-matching prefix
+        users = userMapper.findByPathPrefix("999");
+        assertTrue(users.isEmpty(), "Users list should be empty for non-matching prefix");
     }
 
     @Test

@@ -71,7 +71,7 @@ public class DepartmentService {
 
         Department department1 = reget(department.getParentDepartment(), department.getDepartmentName());
         System.out.println("**********");
-        department1.setPath(getDepartmentsById(department1.getParentDepartment()).getPath() + "_" + department1.getId());
+        department1.setPath(getDepartmentById(department1.getParentDepartment()).getPath() + "_" + department1.getId());
         updateDepartment(department1);
         return true;
     }

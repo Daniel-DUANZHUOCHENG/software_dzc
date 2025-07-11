@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +28,6 @@ public class UserBehaviorService {
 
     @PostConstruct
     public void init() {
-        // 从文件中读取总访客数
         try (BufferedReader reader = new BufferedReader(new FileReader(visitorCounterFile))) {
             String line = reader.readLine();
             if (line != null) {
@@ -40,43 +38,44 @@ public class UserBehaviorService {
         }
     }
 
-    public void createUserBehavior(UserBehavior userBehavior) {
-        userBehaviorMapper.insertUserBehavior(userBehavior);
-        updateRealTimeStats(userBehavior);
+    public void recordBehavior(UserBehavior behavior) {
+        userBehaviorMapper.insertUserBehavior(behavior);
+        updateRealTimeStats(behavior);
+    }
+
+    public List<UserBehavior> getBehaviorsByUserId(Integer userId) {
+        return userBehaviorMapper.getUserBehaviorsByUserId(userId);
+    }
+
+    public List<UserBehavior> searchBehaviors(String action, String timestamp) {
+        return userBehaviorMapper.searchUserBehaviors(action, timestamp);
     }
 
     public List<UserBehavior> getAllUserBehaviors() {
         return userBehaviorMapper.selectAllUserBehaviors();
     }
 
-    public List<UserBehavior> searchUserBehaviors(String action, String timestamp) {
-        return userBehaviorMapper.searchUserBehaviors(action, timestamp);
+    public void createUserBehavior(UserBehavior behavior) {
+        userBehaviorMapper.insertUserBehavior(behavior);
+        updateRealTimeStats(behavior);
     }
-
 
     public int getRealTimeVisitors() {
         long currentTime = System.currentTimeMillis();
-        activeVisitors.entrySet().removeIf(entry -> (currentTime - entry.getValue()) > 300000); // 5分钟未活动
+        activeVisitors.entrySet().removeIf(entry -> (currentTime - entry.getValue()) > 300000);
         return totalVisitors.get();
     }
 
-    private void updateRealTimeStats(UserBehavior userBehavior) {
+    private void updateRealTimeStats(UserBehavior behavior) {
         long currentTime = System.currentTimeMillis();
-        activeVisitors.put(userBehavior.getUserId(), currentTime);
-
-        // 增加总访客数
+        activeVisitors.put(behavior.getUserId(), currentTime);
         totalVisitors.incrementAndGet();
         saveTotalVisitors();
-
-        // 假设 userId 唯一标识用户
         onlineUsers.incrementAndGet();
-
-        // 清理不活跃的访客
-        activeVisitors.entrySet().removeIf(entry -> (currentTime - entry.getValue()) > 300000); // 5分钟未活动
+        activeVisitors.entrySet().removeIf(entry -> (currentTime - entry.getValue()) > 300000);
     }
 
     private void saveTotalVisitors() {
-        // 将总访客数保存到文件
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(visitorCounterFile))) {
             writer.write(Integer.toString(totalVisitors.get()));
         } catch (IOException e) {
@@ -98,7 +97,6 @@ public class UserBehaviorService {
 
     public void updateRealTimeVisitors() {
         int currentOnlineUsers = onlineUsers.get();
-        System.out.println(currentOnlineUsers);
         totalVisitors.addAndGet(currentOnlineUsers);
         saveTotalVisitors();
     }

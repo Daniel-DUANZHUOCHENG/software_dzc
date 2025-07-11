@@ -168,6 +168,9 @@ public class TenantService {
 
     public boolean delete(Integer id) {
         Tenant tenant = tenantMapper.getById(id);
+        if (tenant == null) {
+            return false;
+        }
         departmentService.delete(tenant.getRootDepartmentId());
         tenantMapper.deleteById(id);
         return true;

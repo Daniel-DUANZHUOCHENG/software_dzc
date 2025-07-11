@@ -28,7 +28,20 @@ class TenantTest {
     void testTenantParameterizedConstructor() {
         LocalDateTime now = LocalDateTime.now();
         Tenant tenant = new Tenant();
+        
+        // Set all properties
+        tenant.setId(1);
+        tenant.setAdminUsername("admin");
+        tenant.setPassword("password");
+        tenant.setContactPerson("John Doe");
+        tenant.setPhone("1234567890");
+        tenant.setTenantName("Test Tenant");
+        tenant.setCreatedAt(now);
+        tenant.setIcon("icon.png");
+        tenant.setRemark("remark");
+        tenant.setRootDepartmentId(10);
 
+        // Verify all properties
         assertEquals(1, tenant.getId());
         assertEquals("admin", tenant.getAdminUsername());
         assertEquals("password", tenant.getPassword());

@@ -57,7 +57,7 @@ public class UserBehaviorController {
             @RequestParam(required = false) String action,
             @RequestParam(required = false) String timestamp) {
         try {
-            List<UserBehavior> behaviors = userBehaviorService.searchUserBehaviors(action, timestamp);
+            List<UserBehavior> behaviors = userBehaviorService.searchBehaviors(action, timestamp);
             Map<String, Object> response = new HashMap<>();
             response.put("behaviors", behaviors);
             response.put("total", behaviors.size());

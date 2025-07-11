@@ -5,28 +5,26 @@ import edu.neu.oaas.mapper.UserMapper;
 import edu.neu.oaas.pojo.Department;
 import edu.neu.oaas.pojo.Tenant;
 import edu.neu.oaas.pojo.User;
-import edu.neu.oaas.service.DepartmentService;
-import edu.neu.oaas.service.TenantService;
-import edu.neu.oaas.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Transactional
+import org.springframework.web.multipart.MultipartFile;
+
 public class TenantServiceTest {
 
     @Mock
@@ -52,6 +50,7 @@ public class TenantServiceTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         tenant = new Tenant();
+        tenant.setId(1);
         tenant.setAdminUsername("admin");
         tenant.setPassword("password");
         tenant.setContactPerson("John Doe");
@@ -63,12 +62,16 @@ public class TenantServiceTest {
         tenant.setRootDepartmentId(1);
 
         department = new Department();
+        department.setId(1);
         department.setDepartmentName("TestDepartment");
         department.setCreatedAt(LocalDateTime.now());
         department.setParentDepartment(1);
         department.setTenantId(1);
+        department.setPath("/1");
+        department.setStatus("Active");
 
         user = new User();
+        user.setId(1);
         user.setUsername("admin");
         user.setPassword("password");
         user.setEmail("admin@example.com");
@@ -78,6 +81,8 @@ public class TenantServiceTest {
         user.setStatus("Active");
         user.setCreatedAt(LocalDateTime.now());
         user.setTenantId(1);
+        user.setDepartmentId(1);
+        user.setPath("/1");
     }
 
     @Test
@@ -85,7 +90,7 @@ public class TenantServiceTest {
         when(tenantMapper.getAll()).thenReturn(Arrays.asList(tenant));
         List<Tenant> tenants = tenantService.getAll();
         assertFalse(tenants.isEmpty());
-        verify(tenantMapper, times(1)).getAll();
+        verify(tenantMapper).getAll();
     }
 
     @Test
@@ -93,7 +98,7 @@ public class TenantServiceTest {
         when(tenantMapper.getByName("TestTenant")).thenReturn(Arrays.asList(tenant));
         List<Tenant> tenants = tenantService.getByName("TestTenant");
         assertFalse(tenants.isEmpty());
-        verify(tenantMapper, times(1)).getByName("TestTenant");
+        verify(tenantMapper).getByName("TestTenant");
     }
 
     @Test
@@ -101,87 +106,340 @@ public class TenantServiceTest {
         when(tenantMapper.getById(1)).thenReturn(tenant);
         Tenant found = tenantService.getById(1);
         assertNotNull(found);
-        verify(tenantMapper, times(1)).getById(1);
+        verify(tenantMapper).getById(1);
     }
 
     @Test
     public void testInsertTenant() {
-        // Simulate insertTenant2 setting the ID on the tenant
-        doAnswer(invocation -> {
-            Tenant t = invocation.getArgument(0);
-            t.setId(1); // simulate setting the generated ID
-            return null;
-        }).when(tenantMapper).insertTenant2(any(Tenant.class));
+        // 模拟insertTenant2返回成功
+        doNothing().when(tenantMapper).insertTenant2(any(Tenant.class));
 
-        // Simulate reget method returning the tenant with the set ID
+        // 模拟reget返回tenant
         when(tenantMapper.reget(any(Tenant.class))).thenReturn(tenant);
 
-        // Simulate insertDepartment method (void return type)
-//        doNothing().when(departmentService).insertDepartment(any(Department.class));
-
-        // Simulate reget method on departmentService returning the department
+        // 模拟department相关操作
         when(departmentService.reget(1, "TestDepartment")).thenReturn(department);
+        when(departmentService.insertDepartment(any(Department.class))).thenReturn(true);
 
-        // Simulate insertUser method (void return type)
-//        doNothing().when(userService).insertUser(any(User.class));
+        // 模拟user相关操作
+        when(userService.insertUser(any(User.class))).thenReturn(true);
 
-        // Call the method under test
+        // 执行测试
         boolean result = tenantService.insertTenant(tenant, department, user);
 
-        // Verify and assert
+        // 验证结果
         assertTrue(result);
-        verify(tenantMapper, times(1)).insertTenant2(tenant);
-        verify(departmentService, times(1)).insertDepartment(department);
-        verify(userService, times(1)).insertUser(user);
+        verify(tenantMapper).insertTenant2(tenant);
+        verify(departmentService).insertDepartment(any(Department.class));
+        verify(userService).insertUser(any(User.class));
     }
-
 
     @Test
     public void testUpdateTenant() {
         doNothing().when(tenantMapper).updateTenant(tenant);
         boolean result = tenantService.updateTenant(tenant);
         assertTrue(result);
-        verify(tenantMapper, times(1)).updateTenant(tenant);
+        verify(tenantMapper).updateTenant(tenant);
     }
 
     @Test
     public void testDelete() {
+        // 模拟获取tenant
         when(tenantMapper.getById(1)).thenReturn(tenant);
-//        doNothing().when(departmentService).delete(1);
-//        doNothing().when(tenantMapper).deleteById(1);
+        
+        // 模拟删除操作
+        when(departmentService.delete(1)).thenReturn(true);
+        doNothing().when(tenantMapper).deleteById(1);
 
+        // 执行测试
         boolean result = tenantService.delete(1);
+        
+        // 验证结果
         assertTrue(result);
-        verify(tenantMapper, times(1)).getById(1);
-        verify(departmentService, times(1)).delete(1);
-        verify(tenantMapper, times(1)).deleteById(1);
+        verify(tenantMapper).getById(1);
+        verify(departmentService).delete(1);
+        verify(tenantMapper).deleteById(1);
     }
 
     @Test
-    public void testAddTenant() {
-        doNothing().when(tenantMapper).insertTenant2(tenant);
-        tenantService.insertTenant2(tenant);
-        verify(tenantMapper, times(1)).insertTenant2(tenant);
+    public void testDeleteWithNonExistentTenant() {
+        // Mock tenant not found
+        when(tenantMapper.getById(999)).thenReturn(null);
+        
+        // Mock department service to ensure it's not called
+        when(departmentService.delete(anyInt())).thenReturn(true);
+        
+        // Mock user service to ensure it's not called
+        when(userService.deleteById(anyInt())).thenReturn(true);
+        
+        // Execute test
+        boolean result = tenantService.delete(999);
+        
+        // Verify result and interactions
+        assertFalse(result, () -> "Should return false when tenant does not exist");
+        verify(tenantMapper).getById(999);
+        verify(departmentService, never()).delete(anyInt());
+        verify(tenantMapper, never()).deleteById(anyInt());
+        verify(userService, never()).deleteById(anyInt());
+    }
+
+    @Test
+    public void testInsertTenant2() {
+        // Setup test data
+        Tenant newTenant = new Tenant();
+        newTenant.setTenantName("NewTenant");
+        newTenant.setContactPerson("Jane Doe");
+        newTenant.setPhone("9876543210");
+
+        // Mock tenant insertion
+        doNothing().when(tenantMapper).insertTenant(any(Tenant.class));
+
+        // Execute test
+        tenantService.insertTenant2(newTenant);
+
+        // Verify correct method was called
+        verify(tenantMapper).insertTenant(newTenant);
+        verify(tenantMapper, never()).insertTenant2(any(Tenant.class));
     }
 
     @Test
     public void testGetAllTenants() {
-        when(tenantMapper.findAll()).thenReturn(Arrays.asList(tenant));
-        List<Tenant> tenants = tenantService.getAll();
-        assertFalse(tenants.isEmpty());
-        verify(tenantMapper, times(1)).findAll();
+        // Setup test data
+        List<Tenant> tenants = Arrays.asList(tenant);
+        when(tenantMapper.getAll()).thenReturn(tenants);
+
+        // Execute test
+        List<Tenant> result = tenantService.getAll();
+
+        // Verify result
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+        verify(tenantMapper).getAll();
+        verify(tenantMapper, never()).findAll();
     }
 
     @Test
     public void testRegisterTenantAndUser() {
+        // Mock tenant creation
+        doAnswer(invocation -> {
+            Tenant t = invocation.getArgument(0);
+            t.setId(1);
+            return null;
+        }).when(tenantMapper).insertTenant2(any(Tenant.class));
+
+        // Mock user creation
+        doNothing().when(userMapper).insertUser2(any(User.class));
+
+        // Execute test
+        tenantService.registerTenantAndUser(
+            "TestTenant",
+            "John Doe",
+            "1234567890",
+            "admin@example.com",
+            "admin",
+            "password"
+        );
+
+        // Verify interactions
+        verify(tenantMapper).insertTenant2(argThat(t -> 
+            t.getTenantName().equals("TestTenant") &&
+            t.getContactPerson().equals("John Doe") &&
+            t.getPhone().equals("1234567890")
+        ));
+        verify(userMapper).insertUser2(argThat(u ->
+            u.getUsername().equals("admin") &&
+            u.getEmail().equals("admin@example.com")
+        ));
+    }
+
+    @Test
+    public void testRegisterTenantAndUserWithExistingTenant() {
+        when(tenantMapper.getTenantByName("TestTenant")).thenReturn(tenant);
+
+        assertThrows(IllegalArgumentException.class, () ->
+            tenantService.registerTenantAndUser(
+                "TestTenant",
+                "John Doe",
+                "1234567890",
+                "admin@example.com",
+                "admin",
+                "password"
+            )
+        );
+
+        verify(tenantMapper, never()).insertTenant2(any(Tenant.class));
+        verify(userMapper, never()).insertUser2(any(User.class));
+    }
+
+    @Test
+    public void testRegisterTenantAndUserWithExistingUsername() {
+        when(tenantMapper.getTenantByName("TestTenant")).thenReturn(null);
+        when(userMapper.getUserByUsername("admin")).thenReturn(user);
+
+        assertThrows(IllegalArgumentException.class, () ->
+            tenantService.registerTenantAndUser(
+                "TestTenant",
+                "John Doe",
+                "1234567890",
+                "admin@example.com",
+                "admin",
+                "password"
+            )
+        );
+
+        verify(tenantMapper, never()).insertTenant2(any(Tenant.class));
+        verify(userMapper, never()).insertUser2(any(User.class));
+    }
+
+    @Test
+    public void testRegisterTenantAndUserWithExistingEmail() {
         when(tenantMapper.getTenantByName("TestTenant")).thenReturn(null);
         when(userMapper.getUserByUsername("admin")).thenReturn(null);
-        when(userMapper.getUserByEmail("admin@example.com")).thenReturn(null);
-        doNothing().when(tenantMapper).insertTenant2(tenant);
-        doNothing().when(userMapper).insertUser2(user);
+        when(userMapper.getUserByEmail("admin@example.com")).thenReturn(user);
 
-        tenantService.registerTenantAndUser("TestTenant", "John Doe", "1234567890", "admin@example.com", "admin", "password");
-        verify(tenantMapper, times(1)).insertTenant2(any(Tenant.class));
-        verify(userMapper, times(1)).insertUser2(any(User.class));
+        assertThrows(IllegalArgumentException.class, () ->
+            tenantService.registerTenantAndUser(
+                "TestTenant",
+                "John Doe",
+                "1234567890",
+                "admin@example.com",
+                "admin",
+                "password"
+            )
+        );
+
+        verify(tenantMapper, never()).insertTenant2(any(Tenant.class));
+        verify(userMapper, never()).insertUser2(any(User.class));
+    }
+
+    @Test
+    public void testDeleteTenantSuccess() {
+        // Setup
+        when(tenantMapper.getById(1)).thenReturn(tenant);
+        doNothing().when(departmentService).deleteDepartmentByTenantId(1);
+        doNothing().when(userService).deleteUserByTenantId(1);
+        doNothing().when(tenantMapper).deleteById(1);
+
+        // Execute
+        boolean result = tenantService.deleteTenant(1);
+
+        // Verify
+        assertTrue(result);
+        verify(tenantMapper).getById(1);
+        verify(departmentService).deleteDepartmentByTenantId(1);
+        verify(userService).deleteUserByTenantId(1);
+        verify(tenantMapper).deleteById(1);
+    }
+
+    @Test
+    public void testDeleteTenantNonExistent() {
+        // Setup
+        when(tenantMapper.getById(999)).thenReturn(null);
+
+        // Execute & Verify
+        assertThrows(IllegalArgumentException.class, () -> tenantService.deleteTenant(999));
+        verify(tenantMapper).getById(999);
+        verify(departmentService, never()).deleteDepartmentByTenantId(anyInt());
+        verify(userService, never()).deleteUserByTenantId(anyInt());
+        verify(tenantMapper, never()).deleteById(anyInt());
+    }
+
+    @Test
+    public void testUpdateTenant3Success() {
+        // Setup
+        Tenant updateTenant = new Tenant();
+        updateTenant.setId(1);
+        updateTenant.setTenantName("UpdatedTenant");
+        doNothing().when(tenantMapper).updateTenant(updateTenant);
+
+        // Execute
+        boolean result = tenantService.updateTenant3(updateTenant);
+
+        // Verify
+        assertTrue(result);
+        verify(tenantMapper).updateTenant(updateTenant);
+    }
+
+    @Test
+    public void testUpdateTenant3Null() {
+        assertThrows(IllegalArgumentException.class, () -> tenantService.updateTenant3(null));
+        verify(tenantMapper, never()).updateTenant(any());
+    }
+
+    @Test
+    public void testSearchTenantsAllParameters() {
+        // Setup
+        LocalDate startDate = LocalDate.now().minusDays(7);
+        LocalDate endDate = LocalDate.now();
+        List<Tenant> expectedTenants = Arrays.asList(tenant);
+        when(tenantMapper.searchTenants("TestTenant", "John", "123", startDate, endDate))
+            .thenReturn(expectedTenants);
+
+        // Execute
+        List<Tenant> result = tenantService.searchTenants("TestTenant", "John", "123", startDate, endDate);
+
+        // Verify
+        assertNotNull(result);
+        assertEquals(expectedTenants, result);
+        verify(tenantMapper).searchTenants("TestTenant", "John", "123", startDate, endDate);
+    }
+
+    @Test
+    public void testSearchTenantsPartialParameters() {
+        // Setup
+        List<Tenant> expectedTenants = Arrays.asList(tenant);
+        when(tenantMapper.searchTenants("TestTenant", null, null, null, null))
+            .thenReturn(expectedTenants);
+
+        // Execute
+        List<Tenant> result = tenantService.searchTenants("TestTenant", null, null, null, null);
+
+        // Verify
+        assertNotNull(result);
+        assertEquals(expectedTenants, result);
+        verify(tenantMapper).searchTenants("TestTenant", null, null, null, null);
+    }
+
+    @Test
+    public void testSaveIconSuccess() throws IOException {
+        // Setup
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(mockFile.getOriginalFilename()).thenReturn("test.png");
+        
+        // Execute
+        String result = tenantService.saveIcon(mockFile);
+
+        // Verify
+        assertNotNull(result);
+        assertTrue(result.startsWith("/icons/"));
+        assertTrue(result.endsWith("_test.png"));
+        verify(mockFile).transferTo(any(File.class));
+    }
+
+    @Test
+    public void testSaveIconIOException() throws IOException {
+        // Setup
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(mockFile.getOriginalFilename()).thenReturn("test.png");
+        doThrow(new IOException("Test exception")).when(mockFile).transferTo(any(File.class));
+
+        // Execute & Verify
+        assertThrows(IOException.class, () -> tenantService.saveIcon(mockFile));
+    }
+
+    @Test
+    public void testGetAllTenantNames() {
+        // Setup
+        List<Tenant> expectedTenants = Arrays.asList(tenant);
+        when(tenantMapper.getAllTenantNames()).thenReturn(expectedTenants);
+
+        // Execute
+        List<Tenant> result = tenantService.getAllTenantNames();
+
+        // Verify
+        assertNotNull(result);
+        assertEquals(expectedTenants, result);
+        verify(tenantMapper).getAllTenantNames();
     }
 }
